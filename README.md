@@ -11,7 +11,11 @@ A static class workspace for the 8-hour Excel Power Query course (case study: Th
 - **แบบทดสอบและความมั่นใจ** — the 15-question pre/post knowledge test (auto-scored, stored per-browser), the 10-item confidence self-assessment, and the 30-day follow-up survey.
 - **ไฟล์ฝึกปฏิบัติ** — zipped sample data files per lesson folder (and one combined pack) for hands-on practice in Excel.
 
-Source content was extracted verbatim from the course's Word/PowerPoint/Excel materials (`03_แบบฝึกหัด_Exercises.docx`, `04_Workshop_Final.docx`, `05_เฉลย_Solutions_M_Code.docx`, `07_คู่มือผู้เรียน_Learner_Handbook.docx`, `08_แบบวัดผล_Assessment_Toolkit.docx`, `02_Excel_PowerQuery_Slides.pptx`) and the `01_DataFiles_ไฟล์ข้อมูลตัวอย่าง` sample dataset. The quiz/confidence/follow-up tools save results to the visitor's own browser (`localStorage`) only — nothing is sent anywhere.
+Source content was extracted verbatim from the course's Word/PowerPoint/Excel materials (`03_แบบฝึกหัด_Exercises.docx`, `04_Workshop_Final.docx`, `05_เฉลย_Solutions_M_Code.docx`, `07_คู่มือผู้เรียน_Learner_Handbook.docx`, `08_แบบวัดผล_Assessment_Toolkit.docx`, `02_Excel_PowerQuery_Slides.pptx`) and the `01_DataFiles_ไฟล์ข้อมูลตัวอย่าง` sample dataset. Every quiz, confidence, follow-up, and exercise/workshop self-check result always saves to the visitor's own browser (`localStorage`) first — nothing leaves the browser by default.
+
+## Optional: a grade book you can actually see
+
+By default all scores above stay local to each student's browser. [`backend/`](backend/) has a small Google Apps Script Web App you can deploy to your own Google account so every submission also lands as a row in a Google Sheet you own — see [`backend/README.md`](backend/README.md) for the one-time setup. Until you deploy it and set `GAS_ENDPOINT` in `app.js`, the site behaves exactly as before.
 
 ## Publish with GitHub Pages
 

@@ -92,6 +92,25 @@ const reveal = (openLabel, closeLabel, innerHtml) => `<button type="button" clas
 const zipLink = (folder, label) => `<a class="zip-link" href="data-files/${encodeURIComponent(folder)}.zip" download>⬇ ${esc(label || `ดาวน์โหลดไฟล์ข้อมูล ${folder}`)}</a>`;
 const MASCOT_REFRESH_URL = "https://liff.line.me/2011577141-9ukdVg3q";
 
+// Google Apps Script grade-book backend — see backend/README.md to deploy your own
+// and paste the resulting Web App URL here. Left blank, the site works exactly as
+// before and only saves scores to the visitor's own browser.
+const GAS_ENDPOINT = "";
+const GAS_SECRET = "";
+
+function studentName() {
+  return (localStorage.getItem("pq-student-name") || "").trim();
+}
+
+function syncToBackend(type, payload) {
+  if (!GAS_ENDPOINT) return;
+  fetch(GAS_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ type, secret: GAS_SECRET, name: studentName(), ...payload }),
+  }).catch(() => {}); // best-effort: the local save already happened regardless of network/CORS result
+}
+
 function renderNav() {
   const chapterLinks = chapters.map(c => `<button class="nav-link" data-view="chapter" data-id="${c.id}"><span class="nav-number">${c.number}</span>${esc(c.title)}</button>`).join("");
   const exerciseLinks = exercisesData.map(e => `<button class="nav-link" data-view="exercise" data-id="${e.id}"><span class="nav-number">${String(e.id).padStart(2, "0")}</span>${esc(e.title)}</button>`).join("");
@@ -549,6 +568,7 @@ document.querySelector("#app").addEventListener("submit", event => {
     const score = answers.filter((a, i) => a === quizQuestions[i].answer).length;
     const unknown = answers.filter(a => a === 4).length;
     save(`pq-quiz-${mode}`, { answers, score, unknown, savedAt: Date.now() });
+    syncToBackend("quiz", { mode, score, total: quizQuestions.length, unknown, answers });
     toast("บันทึกผลแบบทดสอบแล้ว");
     render();
     return;
@@ -563,6 +583,8 @@ document.querySelector("#app").addEventListener("submit", event => {
       payload.intention = { score: parseInt(data.get("intentionScore"), 10), project: data.get("project"), blocker: data.get("blocker") };
     }
     save(`pq-confidence-${mode}`, payload);
+    const average = (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(2);
+    syncToBackend("confidence", { mode, average, intentionScore: payload.intention ? payload.intention.score : "", project: payload.intention ? payload.intention.project : "", blocker: payload.intention ? payload.intention.blocker : "" });
     toast("บันทึกแบบประเมินความมั่นใจแล้ว");
     render();
     return;
@@ -572,6 +594,7 @@ document.querySelector("#app").addEventListener("submit", event => {
     const data = new FormData(form);
     const answers = followupQuestions.map((q, i) => q.type === "multi" ? data.getAll(`f${i}`) : data.get(`f${i}`));
     save("pq-followup", { answers, savedAt: Date.now() });
+    syncToBackend("followup", { answers });
     toast("บันทึกแบบติดตาม 30 วันแล้ว");
     render();
     return;
@@ -591,6 +614,13 @@ document.querySelector("#app").addEventListener("submit", event => {
     });
     save(key, { inputs, results, submittedAt: Date.now() });
     const allPass = results.every(Boolean);
+    const keyMatch = /^pq-selfcheck-(exercise|workshop)-(.+)$/.exec(key);
+    if (keyMatch) {
+      const [, kind, id] = keyMatch;
+      syncToBackend(kind, kind === "exercise"
+        ? { exerciseId: id, score: results.filter(Boolean).length, total: results.length, allPass, inputs }
+        : { score: results.filter(Boolean).length, total: results.length, allPass, inputs });
+    }
     toast(allPass ? "ตรวจแล้ว — ผ่านครบทุกข้อ! 🎉" : "บันทึกผลตรวจสอบแล้ว");
     render();
   }
@@ -621,6 +651,13 @@ pinButton.addEventListener("click", () => {
   toast(nextPinned ? "ปักหมุดเมนูแล้ว — เปิดค้างไว้ทุกครั้ง" : "เลิกปักหมุดเมนูแล้ว");
 });
 setSidebarPinned(stored("pq-sidebar-pinned", false));
+
+const studentNameInput = document.querySelector("#student-name");
+studentNameInput.value = studentName();
+studentNameInput.addEventListener("change", () => {
+  localStorage.setItem("pq-student-name", studentNameInput.value.trim());
+  toast("บันทึกชื่อแล้ว");
+});
 document.addEventListener("mousemove", event => {
   if (event.clientX <= 6 && !sidebarEl.classList.contains("open") && !sidebarEl.classList.contains("pinned")) setSidebarOpen(true);
 });
