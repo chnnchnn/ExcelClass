@@ -246,7 +246,7 @@ function showUploadHistoryModal() {
 function showQrModal() {
   const canvas = document.createElement("canvas");
   new QRious({ element: canvas, value: MASCOT_REFRESH_URL, size: 480, background: "#ffffff", foreground: "#123023", level: "M" });
-  showModal(`<h2>สแกนเพื่อรีเฟรชโปรแกรม</h2><p class="lede">เปิดกล้องมือถือหรือแอป LINE แล้วสแกน QR นี้จากหน้าจอ</p><img class="qr-modal-image" src="${canvas.toDataURL()}" alt="QR code สำหรับ ${esc(MASCOT_REFRESH_URL)}" /><p class="lede" style="text-align:center;word-break:break-all">${esc(MASCOT_REFRESH_URL)}</p>`);
+  showModal(`<img class="qr-modal-image" src="${canvas.toDataURL()}" alt="QR code สำหรับ ${esc(MASCOT_REFRESH_URL)}" /><p class="lede" style="text-align:center;word-break:break-all">${esc(MASCOT_REFRESH_URL)}</p>`);
 }
 
 async function uploadHomeworkFile(file) {
