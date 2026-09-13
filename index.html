@@ -13,8 +13,10 @@
   <body>
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
+        <a class="mascot-link" href="https://liff.line.me/2011577141-9ukdVg3q" title="คลิกมาสคอตเพื่อรีเฟรชโปรแกรม">
+          <img class="brand-mark" src="assets/mascot-avatar.jpg" alt="Power Bot — คลิกเพื่อรีเฟรชโปรแกรม" />
+        </a>
         <a class="brand" href="#start" aria-label="กลับไปหน้าเริ่มต้น">
-          <img class="brand-mark" src="assets/mascot-avatar.jpg" alt="" />
           <span>Excel Power Query<small>ห้องเรียนออนไลน์</small></span>
         </a>
         <button id="pin-button" class="pin-button" type="button" aria-pressed="false" title="ปักหมุดเมนูให้เปิดค้างไว้">📌</button>
@@ -32,6 +34,10 @@
       <header class="topbar">
         <button class="icon-button menu-button" id="menu-button" aria-label="เปิดเมนู">☰</button>
         <label class="search"><span>⌕</span><input id="search" type="search" placeholder="ค้นหาหัวข้อ เทคนิค หรือคำสั่ง M" /></label>
+        <div class="density-switch" role="group" aria-label="ความหนาแน่นของเนื้อหา">
+          <button type="button" class="density-option" data-density="normal">Normal</button>
+          <button type="button" class="density-option" data-density="compact">Compact</button>
+        </div>
         <button class="icon-button" id="theme-button" aria-label="เปลี่ยนโหมดสี" title="เปลี่ยนโหมดสี">◐</button>
       </header>
       <div id="app" class="app"></div>

@@ -90,6 +90,7 @@ const setViewHash = (value) => { location.hash = value; };
 const codeBlock = (text) => `<pre class="code-block">${esc(text)}</pre>`;
 const reveal = (openLabel, closeLabel, innerHtml) => `<button type="button" class="reveal-btn" data-open="${esc(openLabel)}" data-close="${esc(closeLabel)}">${esc(openLabel)}</button><div class="reveal-panel">${innerHtml}</div>`;
 const zipLink = (folder, label) => `<a class="zip-link" href="data-files/${encodeURIComponent(folder)}.zip" download>⬇ ${esc(label || `ดาวน์โหลดไฟล์ข้อมูล ${folder}`)}</a>`;
+const MASCOT_REFRESH_URL = "https://liff.line.me/2011577141-9ukdVg3q";
 
 function renderNav() {
   const chapterLinks = chapters.map(c => `<button class="nav-link" data-view="chapter" data-id="${c.id}"><span class="nav-number">${c.number}</span>${esc(c.title)}</button>`).join("");
@@ -117,7 +118,7 @@ function renderHome() {
     ["assessment", null, "✓", "แบบทดสอบและความมั่นใจ", "ทำก่อน–หลังเรียนเพื่อดูว่าความเข้าใจเปลี่ยนไปแค่ไหน"],
     ["datafiles", null, "⇩", "ไฟล์ฝึกปฏิบัติ", "ดาวน์โหลดชุดข้อมูลตัวอย่างของทุกบทเรียนไปฝึกกับ Excel จริง"],
   ];
-  return `<section class="hero" id="start"><div><div class="eyebrow">ห้องเรียนออนไลน์ 8 ชั่วโมง · กรณีศึกษา ไทยเฟรช เทรดดิ้ง</div><h1>ห้องเรียนที่ทำให้<br>งานซ้ำ ๆ จบด้วย Refresh</h1><p class="lede">ครบทั้งคู่มือ สไลด์บรรยาย แบบฝึกหัด Workshop สุดท้าย และแบบทดสอบ ใช้ระหว่างเรียนและกลับมาเปิดเมื่อเจองานจริง เป้าหมายไม่ใช่จำทุกเมนู แต่คือสร้างขั้นตอนที่เชื่อถือได้และทำงานซ้ำแทนคุณ.</p><div class="hero-meta"><span class="tag">7 บทเรียน</span><span class="tag">87 สไลด์</span><span class="tag">แบบฝึกหัด 7 ชุด</span><span class="tag">Workshop สุดท้าย</span><span class="tag">แบบทดสอบก่อน–หลัง</span></div><div class="progress-wrap"><div class="progress-label"><span>ความคืบหน้าบทเรียนคู่มือ</span><span>${done} / ${chapters.length} บท</span></div><div class="progress"><i style="width:${done / chapters.length * 100}%"></i></div></div></div><img class="hero-mascot" src="assets/mascot.jpg" alt="Power Bot มาสคอตประจำห้องเรียน Excel Power Query" /></section>
+  return `<section class="hero" id="start"><div><div class="eyebrow">ห้องเรียนออนไลน์ 8 ชั่วโมง · กรณีศึกษา ไทยเฟรช เทรดดิ้ง</div><h1>ห้องเรียนที่ทำให้<br>งานซ้ำ ๆ จบด้วย Refresh</h1><p class="lede">ครบทั้งคู่มือ สไลด์บรรยาย แบบฝึกหัด Workshop สุดท้าย และแบบทดสอบ ใช้ระหว่างเรียนและกลับมาเปิดเมื่อเจองานจริง เป้าหมายไม่ใช่จำทุกเมนู แต่คือสร้างขั้นตอนที่เชื่อถือได้และทำงานซ้ำแทนคุณ.</p><div class="hero-meta"><span class="tag">7 บทเรียน</span><span class="tag">87 สไลด์</span><span class="tag">แบบฝึกหัด 7 ชุด</span><span class="tag">Workshop สุดท้าย</span><span class="tag">แบบทดสอบก่อน–หลัง</span></div><div class="progress-wrap"><div class="progress-label"><span>ความคืบหน้าบทเรียนคู่มือ</span><span>${done} / ${chapters.length} บท</span></div><div class="progress"><i style="width:${done / chapters.length * 100}%"></i></div></div></div><a class="hero-mascot-link" href="${MASCOT_REFRESH_URL}" title="คลิกมาสคอตเพื่อรีเฟรชโปรแกรม"><img class="hero-mascot" src="assets/mascot.jpg" alt="Power Bot มาสคอตประจำห้องเรียน Excel Power Query — คลิกเพื่อรีเฟรชโปรแกรม" /></a></section>
   <section><div class="eyebrow">ห้องเรียนของคุณ</div><h2>ทุกอย่างที่ใช้ในคอร์สอยู่ในที่เดียว</h2>
   <div class="workspace-grid">${workspaceCards.map(([view, id, icon, title, desc]) => `<button class="workspace-card" data-view="${view}" ${id ? `data-id="${id}"` : ""}><span class="workspace-icon">${icon}</span><strong>${esc(title)}</strong><small>${esc(desc)}</small></button>`).join("")}</div></section>
   <section class="home-grid"><div><div class="eyebrow">เริ่มจากบทเรียน</div><h2>เรียนทีละบท แล้วลองกับงานของตัวเอง</h2><div class="chapter-list">${chapters.map(c => `<button class="chapter-row" data-view="chapter" data-id="${c.id}"><span class="number">${c.number}</span><span><strong>${esc(c.title)}</strong><small>${esc(c.intro)}</small></span><span class="row-arrow">→</span></button>`).join("")}</div></div><div><div class="eyebrow">จำไว้ก่อนเริ่ม</div><h2>หกภาพในหัวที่ถูกต้อง</h2>${principles.map(p => `<article class="principle"><strong>${esc(p[0])}</strong><p>${esc(p[1])}</p></article>`).join("")}</div></section>`;
@@ -557,6 +558,21 @@ pinButton.addEventListener("click", () => {
   toast(nextPinned ? "ปักหมุดเมนูแล้ว — เปิดค้างไว้ทุกครั้ง" : "เลิกปักหมุดเมนูแล้ว");
 });
 setSidebarPinned(stored("pq-sidebar-pinned", false));
+document.addEventListener("mousemove", event => {
+  if (event.clientX <= 6 && !sidebarEl.classList.contains("open") && !sidebarEl.classList.contains("pinned")) setSidebarOpen(true);
+});
+
+document.querySelector(".density-switch").addEventListener("click", event => {
+  const btn = event.target.closest(".density-option");
+  if (!btn) return;
+  setDensity(btn.dataset.density);
+});
+function setDensity(mode) {
+  document.documentElement.dataset.density = mode;
+  document.querySelectorAll(".density-option").forEach(b => b.classList.toggle("active", b.dataset.density === mode));
+  localStorage.setItem("pq-density", mode);
+}
+setDensity(localStorage.getItem("pq-density") || "compact");
 
 document.querySelector("#theme-button").addEventListener("click", () => { const next = document.documentElement.dataset.theme === "dark" ? "" : "dark"; document.documentElement.dataset.theme = next; localStorage.setItem("pq-theme", next); });
 document.documentElement.dataset.theme = localStorage.getItem("pq-theme") || "";
