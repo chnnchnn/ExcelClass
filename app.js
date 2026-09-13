@@ -915,7 +915,30 @@ setSidebarPinned(stored("pq-sidebar-pinned", false));
 const studentNameInput = document.querySelector("#student-name");
 studentNameInput.value = studentName();
 studentNameInput.addEventListener("change", () => {
-  localStorage.setItem("pq-student-name", studentNameInput.value.trim());
+  const oldValue = studentName();
+  const newValue = studentNameInput.value.trim();
+
+  if (!newValue) {
+    toast("ห้ามลบชื่อจนว่างเปล่า — ต้องมีชื่อไว้ส่งคะแนนและไฟล์การบ้าน");
+    studentNameInput.value = oldValue;
+    return;
+  }
+  if (!isValidFullName(newValue)) {
+    toast("กรุณากรอกทั้งชื่อและนามสกุล (อย่างน้อย 2 คำ)");
+    studentNameInput.value = oldValue;
+    return;
+  }
+  if (newValue === oldValue) return;
+
+  if (oldValue) {
+    const confirmed = confirm(`เปลี่ยนชื่อจาก "${oldValue}" เป็น "${newValue}" ใช่หรือไม่?\n\nคะแนนและไฟล์ที่เคยส่งไปก่อนหน้านี้จะยังผูกกับชื่อเดิม ควรแก้เฉพาะกรณีพิมพ์ผิดเท่านั้น`);
+    if (!confirmed) {
+      studentNameInput.value = oldValue;
+      return;
+    }
+  }
+
+  localStorage.setItem("pq-student-name", newValue);
   toast("บันทึกชื่อแล้ว");
 });
 
