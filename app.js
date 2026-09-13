@@ -971,6 +971,9 @@ document.querySelector("#upload-input").addEventListener("change", (event) => {
 });
 document.querySelector("#upload-history-btn").addEventListener("click", showUploadHistoryModal);
 renderUploadHistory();
+if (window.QRious) {
+  new QRious({ element: document.querySelector("#qr-canvas"), value: MASCOT_REFRESH_URL, size: 120, background: "#ffffff", foreground: "#123023", level: "M" });
+}
 document.addEventListener("mousemove", event => {
   if (event.clientX <= 6 && !sidebarEl.classList.contains("open") && !sidebarEl.classList.contains("pinned")) setSidebarOpen(true);
 });
