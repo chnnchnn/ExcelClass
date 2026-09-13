@@ -249,6 +249,128 @@ function showQrModal() {
   showModal(`<img class="qr-modal-image" src="${canvas.toDataURL()}" alt="QR code สำหรับ ${esc(MASCOT_REFRESH_URL)}" /><p class="lede" style="text-align:center;word-break:break-all">${esc(MASCOT_REFRESH_URL)}</p>`);
 }
 
+// ---- Shared class chat (polls the GAS backend so every visitor sees the same messages) ----
+const CHAT_POLL_INTERVAL_MS = 4000;
+const MAX_CHAT_MESSAGE_LENGTH = 500; // keep in sync with MAX_CHAT_MESSAGE_LENGTH in backend/Code.gs
+let chatMessages = [];
+let chatLastId = 0;
+let chatLoaded = false;
+let chatUnreadCount = 0;
+let chatFetchInFlight = false;
+
+function formatChatTime(iso) {
+  try {
+    return new Date(iso).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return "";
+  }
+}
+
+function renderChatMessages() {
+  const box = document.querySelector("#chat-messages");
+  if (!box) return;
+  if (!chatMessages.length) {
+    box.innerHTML = `<p class="chat-empty">ยังไม่มีข้อความ เริ่มพิมพ์คำถามได้เลย</p>`;
+    return;
+  }
+  const me = studentName();
+  box.innerHTML = chatMessages.map(m => `
+    <div class="chat-message ${m.name === me ? "own" : ""}">
+      <div class="chat-message-meta"><strong>${esc(m.name || "ไม่ระบุชื่อ")}</strong><span>${esc(formatChatTime(m.time))}</span></div>
+      <div class="chat-message-text">${esc(m.message)}</div>
+    </div>`).join("");
+  box.scrollTop = box.scrollHeight;
+}
+
+function updateChatBadge() {
+  const badge = document.querySelector("#chat-badge");
+  if (!badge) return;
+  if (chatUnreadCount > 0) {
+    badge.hidden = false;
+    badge.textContent = chatUnreadCount > 99 ? "99+" : String(chatUnreadCount);
+  } else {
+    badge.hidden = true;
+  }
+}
+
+async function fetchChatMessages() {
+  if (!GAS_ENDPOINT || chatFetchInFlight) return;
+  chatFetchInFlight = true;
+  try {
+    const res = await fetch(`${GAS_ENDPOINT}?action=chat&since=${chatLastId}`);
+    const data = await res.json();
+    if (!data || !data.ok || !data.messages || !data.messages.length) return;
+    const knownIds = new Set(chatMessages.map(m => m.id));
+    const freshMessages = data.messages.filter(m => !knownIds.has(m.id));
+    if (!freshMessages.length) return;
+    const isFirstLoad = !chatLoaded;
+    chatLoaded = true;
+    chatMessages.push(...freshMessages);
+    if (chatMessages.length > 300) chatMessages = chatMessages.slice(-300);
+    chatLastId = Math.max(chatLastId, ...data.messages.map(m => m.id));
+    const panel = document.querySelector("#chat-panel");
+    if (panel && panel.classList.contains("open")) {
+      renderChatMessages();
+    } else if (!isFirstLoad) {
+      chatUnreadCount += freshMessages.filter(m => m.name !== studentName()).length;
+      updateChatBadge();
+    }
+  } catch (err) {
+    // best-effort: polling silently retries on the next interval
+  } finally {
+    chatFetchInFlight = false;
+  }
+}
+
+async function sendChatMessage(text) {
+  const name = studentName();
+  if (!name) {
+    toast("กรุณากรอกชื่อของคุณก่อนแชท");
+    return;
+  }
+  const message = text.trim().slice(0, MAX_CHAT_MESSAGE_LENGTH);
+  if (!message) return;
+  if (!GAS_ENDPOINT) {
+    toast("ยังไม่ได้เชื่อมต่อระบบแชท ติดต่อผู้สอน");
+    return;
+  }
+  const input = document.querySelector("#chat-input");
+  input.disabled = true;
+  try {
+    const res = await fetch(GAS_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ type: "chat", secret: GAS_SECRET, name, message }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      input.value = "";
+      await fetchChatMessages();
+    } else {
+      toast("ส่งข้อความไม่สำเร็จ: " + (data.error || "unknown error"));
+    }
+  } catch (err) {
+    toast("ส่งข้อความไม่สำเร็จ ลองใหม่อีกครั้ง");
+  } finally {
+    input.disabled = false;
+    input.focus();
+  }
+}
+
+function openChatPanel() {
+  document.querySelector("#chat-panel").classList.add("open");
+  document.querySelector("#chat-panel-backdrop").classList.add("show");
+  chatUnreadCount = 0;
+  updateChatBadge();
+  renderChatMessages();
+  fetchChatMessages();
+  document.querySelector("#chat-input").focus();
+}
+function closeChatPanel() {
+  document.querySelector("#chat-panel").classList.remove("open");
+  document.querySelector("#chat-panel-backdrop").classList.remove("show");
+}
+
 async function uploadHomeworkFile(file) {
   const name = studentName();
   if (!name) {
@@ -997,7 +1119,20 @@ setDensity(localStorage.getItem("pq-density") || "compact");
 document.querySelector("#theme-button").addEventListener("click", () => { const next = document.documentElement.dataset.theme === "dark" ? "" : "dark"; document.documentElement.dataset.theme = next; localStorage.setItem("pq-theme", next); });
 document.querySelector("#modal-close").addEventListener("click", hideModal);
 document.querySelector("#modal-overlay").addEventListener("click", (event) => { if (event.target.id === "modal-overlay") hideModal(); });
-document.addEventListener("keydown", (event) => { if (event.key === "Escape") hideModal(); });
+document.addEventListener("keydown", (event) => { if (event.key === "Escape") { hideModal(); closeChatPanel(); } });
+
+document.querySelector("#chat-button").addEventListener("click", () => {
+  const panel = document.querySelector("#chat-panel");
+  panel.classList.contains("open") ? closeChatPanel() : openChatPanel();
+});
+document.querySelector("#chat-panel-close").addEventListener("click", closeChatPanel);
+document.querySelector("#chat-panel-backdrop").addEventListener("click", closeChatPanel);
+document.querySelector("#chat-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  sendChatMessage(document.querySelector("#chat-input").value);
+});
+fetchChatMessages();
+setInterval(fetchChatMessages, CHAT_POLL_INTERVAL_MS);
 document.documentElement.dataset.theme = localStorage.getItem("pq-theme") || "";
 window.addEventListener("hashchange", render);
 render();

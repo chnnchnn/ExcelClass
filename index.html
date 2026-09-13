@@ -49,6 +49,7 @@
           <button type="button" class="density-option" data-density="compact">Compact</button>
         </div>
         <button class="icon-button" id="theme-button" aria-label="เปลี่ยนโหมดสี" title="เปลี่ยนโหมดสี">◐</button>
+        <button class="icon-button chat-button" id="chat-button" aria-label="เปิดแชทถาม-ตอบ" title="แชทถาม-ตอบ">💬<span class="chat-badge" id="chat-badge" hidden>0</span></button>
       </header>
       <div id="app" class="app"></div>
     </main>
@@ -69,6 +70,18 @@
         <button type="submit" class="primary-button">เริ่มใช้งาน</button>
       </form>
     </div>
+    <aside class="chat-panel" id="chat-panel" aria-label="แชทถาม-ตอบ">
+      <div class="chat-panel-header">
+        <h2>💬 แชทถาม-ตอบ</h2>
+        <button type="button" class="chat-panel-close" id="chat-panel-close" aria-label="ปิดแชท">✕</button>
+      </div>
+      <div class="chat-messages" id="chat-messages"><p class="chat-empty">ยังไม่มีข้อความ เริ่มพิมพ์คำถามได้เลย</p></div>
+      <form class="chat-input-row" id="chat-form">
+        <input type="text" id="chat-input" placeholder="พิมพ์คำถามของคุณ..." maxlength="500" autocomplete="off" required />
+        <button type="submit">ส่ง</button>
+      </form>
+    </aside>
+    <div class="chat-panel-backdrop" id="chat-panel-backdrop"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="agenda-data.js"></script>
     <script src="slides-data.js"></script>

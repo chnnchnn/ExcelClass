@@ -26,6 +26,7 @@ Everything on the site that currently produces a score is synced here:
 | `ExerciseSelfCheck` | Each exercise's "ตรวจการบ้านของคุณ" self-check |
 | `WorkshopSelfCheck` | The final workshop's self-check |
 | `FileUploads` (log only) | Filename/size/link for every homework file a student uploads |
+| `Chat` | Messages posted from the shared class chat panel (💬 button, top-right of the header) |
 
 Students can also upload an actual homework file (`.xlsx`/`.xlsm`/`.xls`, max
 8MB — keep `MAX_UPLOAD_BYTES` in sync between `Code.gs` and `app.js` if you
@@ -58,6 +59,14 @@ way.
 > (write) so a re-run either fully succeeds or fails at a point that tells
 > you which half is missing. If uploads ever start failing again with a
 > DriveApp error, re-run this function first.
+
+**Chat:** the 💬 button in the top-right of the header opens a shared chat
+panel — every message a student posts is appended to the `Chat` sheet, and
+all visitors' browsers poll `GET <exec-url>?action=chat&since=<lastId>` every
+few seconds to pick up new messages, so everyone sees the same conversation
+(not just their own browser). This needs no extra authorization step beyond
+what quiz/score syncing already uses (`SpreadsheetApp`) — it does not touch
+Drive.
 
 Each row is tagged with the name the student typed into "ชื่อของคุณ" in the
 sidebar (or "ไม่ระบุชื่อ" if they left it blank — there's no login, so this

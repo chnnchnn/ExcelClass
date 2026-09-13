@@ -21,7 +21,14 @@ const HEADERS = {
   exercise: ["เวลา", "ชื่อนักเรียน", "แบบฝึกหัดที่", "คะแนน", "เต็ม", "ผ่านครบทุกข้อ", "รายละเอียด (JSON)"],
   workshop: ["เวลา", "ชื่อนักเรียน", "คะแนน", "เต็ม", "ผ่านครบทุกข้อ", "รายละเอียด (JSON)"],
   file: ["เวลา", "ชื่อนักเรียน", "ชื่อไฟล์", "ขนาดไฟล์", "ลิงก์ไฟล์ใน Drive"],
+  chat: ["เวลา", "ชื่อนักเรียน", "ข้อความ"],
 };
+
+// Max characters kept per chat message (matches MAX_CHAT_MESSAGE_LENGTH in app.js).
+const MAX_CHAT_MESSAGE_LENGTH = 500;
+
+// How many recent chat messages a client gets back when it has no "since" cursor yet.
+const CHAT_HISTORY_LIMIT = 100;
 
 // Max size for an uploaded homework file's base64 payload (bytes, decoded). Keep
 // in sync with MAX_UPLOAD_BYTES in app.js.
@@ -118,10 +125,36 @@ function oneTimeAuthorizeDriveAccess() {
 }
 
 function doGet(e) {
+  const params = (e && e.parameter) || {};
+  if (params.action === "chat") {
+    return getChatMessages_(params);
+  }
   const ss = getOrCreateSpreadsheet_();
   return ContentService.createTextOutput(
     "Excel Power Query class backend is running.\nGrade book: " + ss.getUrl()
   ).setMimeType(ContentService.MimeType.TEXT);
+}
+
+// Returns chat messages after row `since` (its row number in the Chat sheet),
+// or the last CHAT_HISTORY_LIMIT messages if `since` is absent — this is what
+// the site polls with fetch() to show everyone the same shared chat.
+function getChatMessages_(params) {
+  const sheet = getOrCreateSheet_("Chat", HEADERS.chat);
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return jsonResponse({ ok: true, messages: [] });
+
+  const since = parseInt(params.since, 10) || 0;
+  const startRow = since >= 1 ? since + 1 : Math.max(2, lastRow - CHAT_HISTORY_LIMIT + 1);
+  if (startRow > lastRow) return jsonResponse({ ok: true, messages: [] });
+
+  const values = sheet.getRange(startRow, 1, lastRow - startRow + 1, 3).getValues();
+  const messages = values.map((row, i) => ({
+    id: startRow + i,
+    time: row[0] instanceof Date ? row[0].toISOString() : String(row[0]),
+    name: row[1],
+    message: row[2],
+  }));
+  return jsonResponse({ ok: true, messages });
 }
 
 function buildRow_(type, body) {
@@ -138,6 +171,8 @@ function buildRow_(type, body) {
       return [now, name, body.exerciseId, body.score, body.total, body.allPass ? "ผ่าน" : "ไม่ผ่าน", JSON.stringify(body.inputs || [])];
     case "workshop":
       return [now, name, body.score, body.total, body.allPass ? "ผ่าน" : "ไม่ผ่าน", JSON.stringify(body.inputs || [])];
+    case "chat":
+      return [now, name, String(body.message || "").slice(0, MAX_CHAT_MESSAGE_LENGTH)];
     default:
       return [now, name, JSON.stringify(body)];
   }
@@ -171,7 +206,7 @@ function getOrCreateSheet_(name, headers) {
 }
 
 function capitalize_(type) {
-  const names = { quiz: "Quiz", confidence: "Confidence", followup: "Followup", exercise: "ExerciseSelfCheck", workshop: "WorkshopSelfCheck" };
+  const names = { quiz: "Quiz", confidence: "Confidence", followup: "Followup", exercise: "ExerciseSelfCheck", workshop: "WorkshopSelfCheck", chat: "Chat" };
   return names[type] || null;
 }
 
