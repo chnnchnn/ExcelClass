@@ -187,6 +187,181 @@ async function downloadHandbookPdf() {
   }
 }
 
+// ---- Whiteboard (client-side only — nothing is sent anywhere until exported) ----
+// Fixed intrinsic resolution; CSS scales the canvas to fit its container, so
+// stroke coordinates and widths never need rescaling when the window resizes.
+const WB_CANVAS_WIDTH = 1600;
+const WB_CANVAS_HEIGHT = 900;
+const WHITEBOARD_COLORS = ["#111111", "#d95d45", "#217346", "#1a73e8", "#f6a609", "#7a3ff0"];
+let wbStrokes = []; // {tool:'pen'|'eraser', color, size, points:[{x,y}]} — kept in memory so switching tabs and back doesn't lose the drawing
+let wbCurrentStroke = null;
+let wbDrawing = false;
+let wbTool = "pen";
+let wbColor = WHITEBOARD_COLORS[0];
+let wbSize = 4;
+
+function wbCanvasEl() { return document.querySelector("#wb-canvas"); }
+
+function wbPointFromEvent(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: (e.clientX - rect.left) * (canvas.width / rect.width), y: (e.clientY - rect.top) * (canvas.height / rect.height) };
+}
+
+function wbDrawStroke(ctx, stroke) {
+  if (!stroke.points.length) return;
+  ctx.strokeStyle = stroke.tool === "eraser" ? "#ffffff" : stroke.color;
+  ctx.lineWidth = stroke.size;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  const first = stroke.points[0];
+  ctx.moveTo(first.x, first.y);
+  if (stroke.points.length === 1) {
+    ctx.lineTo(first.x, first.y); // a plain click/tap renders as a dot via the round line cap
+  } else {
+    stroke.points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+  }
+  ctx.stroke();
+}
+
+function wbDrawSegment(ctx, stroke) {
+  const points = stroke.points;
+  const p1 = points[points.length - 2];
+  const p2 = points[points.length - 1];
+  if (!p1 || !p2) return;
+  ctx.strokeStyle = stroke.tool === "eraser" ? "#ffffff" : stroke.color;
+  ctx.lineWidth = stroke.size;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(p1.x, p1.y);
+  ctx.lineTo(p2.x, p2.y);
+  ctx.stroke();
+}
+
+function wbRedraw() {
+  const canvas = wbCanvasEl();
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  wbStrokes.forEach(stroke => wbDrawStroke(ctx, stroke));
+}
+
+function wbApplyToolUI() {
+  document.querySelectorAll(".wb-tool").forEach(b => b.classList.toggle("active", b.dataset.wbTool === wbTool));
+}
+function wbApplyColorUI() {
+  document.querySelectorAll(".wb-color").forEach(b => b.classList.toggle("active", b.dataset.wbColor === wbColor));
+  const customInput = document.querySelector("#wb-color-custom");
+  if (customInput) customInput.value = wbColor;
+}
+function wbSetTool(tool) {
+  wbTool = tool;
+  wbApplyToolUI();
+}
+function wbSetColor(color) {
+  wbColor = color;
+  wbTool = "pen"; // picking a color always switches back to the pen
+  wbApplyToolUI();
+  wbApplyColorUI();
+}
+
+function wbHandlePointerDown(e) {
+  const canvas = wbCanvasEl();
+  canvas.setPointerCapture(e.pointerId);
+  wbDrawing = true;
+  wbCurrentStroke = { tool: wbTool, color: wbColor, size: wbSize, points: [wbPointFromEvent(e, canvas)] };
+}
+function wbHandlePointerMove(e) {
+  if (!wbDrawing || !wbCurrentStroke) return;
+  const canvas = wbCanvasEl();
+  wbCurrentStroke.points.push(wbPointFromEvent(e, canvas));
+  wbDrawSegment(canvas.getContext("2d"), wbCurrentStroke);
+}
+function wbHandlePointerUp() {
+  if (!wbDrawing || !wbCurrentStroke) return;
+  wbDrawing = false;
+  wbStrokes.push(wbCurrentStroke);
+  if (wbCurrentStroke.points.length === 1) wbRedraw(); // draw the dot for a plain click/tap
+  wbCurrentStroke = null;
+}
+
+function wbUndo() {
+  if (!wbStrokes.length) return;
+  wbStrokes.pop();
+  wbRedraw();
+}
+function wbClear() {
+  if (!wbStrokes.length) return;
+  if (!confirm("ล้างกระดานทั้งหมดใช่หรือไม่? เนื้อหาที่ยังไม่ได้บันทึกจะหายไป")) return;
+  wbStrokes = [];
+  wbRedraw();
+}
+
+function wbTimestampLabel() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+function wbSavePng() {
+  const canvas = wbCanvasEl();
+  if (!canvas) return;
+  const link = document.createElement("a");
+  link.download = `whiteboard-${wbTimestampLabel()}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+  toast("บันทึกรูปภาพ Whiteboard แล้ว");
+}
+async function wbSavePdf() {
+  const canvas = wbCanvasEl();
+  if (!canvas) return;
+  toast("กำลังสร้างไฟล์ PDF...");
+  try {
+    await ensurePdfLibs();
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 24;
+    const ratio = Math.min((pageWidth - margin * 2) / canvas.width, (pageHeight - margin * 2) / canvas.height);
+    const drawW = canvas.width * ratio;
+    const drawH = canvas.height * ratio;
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", (pageWidth - drawW) / 2, (pageHeight - drawH) / 2, drawW, drawH);
+    pdf.save(`whiteboard-${wbTimestampLabel()}.pdf`);
+    toast("บันทึก PDF Whiteboard แล้ว");
+  } catch (err) {
+    console.error(err);
+    toast("สร้าง PDF ไม่สำเร็จ ลองใหม่อีกครั้ง");
+  }
+}
+
+function initWhiteboardCanvas() {
+  const canvas = wbCanvasEl();
+  if (!canvas) return;
+  canvas.width = WB_CANVAS_WIDTH;
+  canvas.height = WB_CANVAS_HEIGHT;
+  wbRedraw();
+
+  canvas.addEventListener("pointerdown", wbHandlePointerDown);
+  canvas.addEventListener("pointermove", wbHandlePointerMove);
+  canvas.addEventListener("pointerup", wbHandlePointerUp);
+  canvas.addEventListener("pointercancel", wbHandlePointerUp);
+
+  document.querySelectorAll(".wb-tool").forEach(btn => btn.addEventListener("click", () => wbSetTool(btn.dataset.wbTool)));
+  document.querySelectorAll(".wb-color").forEach(btn => btn.addEventListener("click", () => wbSetColor(btn.dataset.wbColor)));
+  document.querySelector("#wb-color-custom").addEventListener("input", (e) => wbSetColor(e.target.value));
+  document.querySelector("#wb-size").addEventListener("input", (e) => { wbSize = Number(e.target.value); });
+  document.querySelector("#wb-undo").addEventListener("click", wbUndo);
+  document.querySelector("#wb-clear").addEventListener("click", wbClear);
+  document.querySelector("#wb-save-png").addEventListener("click", wbSavePng);
+  document.querySelector("#wb-save-pdf").addEventListener("click", wbSavePdf);
+
+  wbApplyToolUI();
+  wbApplyColorUI();
+  document.querySelector("#wb-size").value = wbSize;
+}
+
 // Google Apps Script grade-book backend — see backend/README.md to deploy your own
 // and paste the resulting Web App URL here. Left blank, the site works exactly as
 // before and only saves scores to the visitor's own browser.
@@ -426,6 +601,7 @@ function renderNav() {
     <div class="nav-group-label">ห้องเรียน</div>
     <button class="nav-link" data-view="agenda"><span class="nav-number">📅</span>Class Agenda</button>
     <button class="nav-link" data-view="slides"><span class="nav-number">▤</span>สไลด์บรรยาย (87 แผ่น)</button>
+    <button class="nav-link" data-view="whiteboard"><span class="nav-number">🖊️</span>Whiteboard</button>
     <div class="nav-group-label">คู่มือผู้เรียน · 7 บท</div>
     ${chapterLinks}
     <div class="nav-group-label">แบบฝึกหัด · 7 ชุด</div>
@@ -838,6 +1014,39 @@ function renderDataFiles() {
   </section>`;
 }
 
+function renderWhiteboard() {
+  return `<section class="whiteboard-page">
+    <div class="eyebrow">ห้องเรียน</div>
+    <h1>🖊️ Whiteboard</h1>
+    <p class="lede">กระดานเขียนสดระหว่างสอน ลากเมาส์ นิ้ว หรือปากกาสัมผัสเพื่อวาด แล้วบันทึกเป็นรูปภาพหรือ PDF ก่อนออกจากหน้านี้ — เนื้อหาจะหายไปเมื่อรีเฟรชหน้าเว็บ</p>
+    <div class="whiteboard-toolbar">
+      <div class="wb-group" role="group" aria-label="เครื่องมือวาด">
+        <button type="button" class="wb-tool" data-wb-tool="pen">✏️ ปากกา</button>
+        <button type="button" class="wb-tool" data-wb-tool="eraser">🧹 ยางลบ</button>
+      </div>
+      <div class="wb-group wb-colors" role="group" aria-label="สีปากกา">
+        ${WHITEBOARD_COLORS.map(c => `<button type="button" class="wb-color" data-wb-color="${c}" style="background:${c}" aria-label="สี ${c}"></button>`).join("")}
+        <input type="color" id="wb-color-custom" class="wb-color-custom" title="เลือกสีเอง" />
+      </div>
+      <label class="wb-size-field">
+        <span>ขนาดเส้น</span>
+        <input type="range" id="wb-size" min="2" max="28" step="1" />
+      </label>
+      <div class="wb-group">
+        <button type="button" id="wb-undo" class="ghost-button">↩ Undo</button>
+        <button type="button" id="wb-clear" class="ghost-button">🗑 ล้างกระดาน</button>
+      </div>
+      <div class="wb-group">
+        <button type="button" id="wb-save-png" class="primary-button">⬇ บันทึกรูปภาพ (PNG)</button>
+        <button type="button" id="wb-save-pdf" class="primary-button">⬇ บันทึก PDF</button>
+      </div>
+    </div>
+    <div class="whiteboard-canvas-wrap">
+      <canvas id="wb-canvas"></canvas>
+    </div>
+  </section>`;
+}
+
 function renderSearch(term) {
   const needle = term.trim().toLowerCase();
   if (!needle) return renderHome();
@@ -877,7 +1086,7 @@ function render() {
   const active = view === "chapter" || view === "exercise" ? id : (view === "slides" ? "" : "");
   document.querySelectorAll(".nav-link").forEach(el => {
     const isChapterOrExercise = (el.dataset.view === "chapter" || el.dataset.view === "exercise") && el.dataset.view === view;
-    const isSingle = ["agenda", "slides", "workshop", "assessment", "datafiles"].includes(el.dataset.view) && el.dataset.view === view;
+    const isSingle = ["agenda", "slides", "workshop", "assessment", "datafiles", "whiteboard"].includes(el.dataset.view) && el.dataset.view === view;
     el.classList.toggle("active", (isChapterOrExercise && el.dataset.id === id) || isSingle);
   });
   app.innerHTML =
@@ -891,7 +1100,9 @@ function render() {
     view === "workshop" ? renderWorkshop() :
     view === "assessment" ? renderAssessment(id, sub) :
     view === "datafiles" ? renderDataFiles() :
+    view === "whiteboard" ? renderWhiteboard() :
     search.value ? renderSearch(search.value) : renderHome();
+  if (view === "whiteboard") initWhiteboardCanvas();
   const sidebarEl = document.querySelector("#sidebar");
   if (!sidebarEl.classList.contains("pinned")) {
     sidebarEl.classList.remove("open");
