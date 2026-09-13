@@ -1016,9 +1016,6 @@ function renderDataFiles() {
 
 function renderWhiteboard() {
   return `<section class="whiteboard-page">
-    <div class="eyebrow">ห้องเรียน</div>
-    <h1>🖊️ Whiteboard</h1>
-    <p class="lede">กระดานเขียนสดระหว่างสอน ลากเมาส์ นิ้ว หรือปากกาสัมผัสเพื่อวาด แล้วบันทึกเป็นรูปภาพหรือ PDF ก่อนออกจากหน้านี้ — เนื้อหาจะหายไปเมื่อรีเฟรชหน้าเว็บ</p>
     <div class="whiteboard-toolbar">
       <div class="wb-group" role="group" aria-label="เครื่องมือวาด">
         <button type="button" class="wb-tool" data-wb-tool="pen">✏️ ปากกา</button>
