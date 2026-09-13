@@ -25,6 +25,24 @@ Everything on the site that currently produces a score is synced here:
 | `Followup` | The 30-day follow-up survey |
 | `ExerciseSelfCheck` | Each exercise's "ตรวจการบ้านของคุณ" self-check |
 | `WorkshopSelfCheck` | The final workshop's self-check |
+| `FileUploads` (log only) | Filename/size/link for every homework file a student uploads |
+
+Students can also upload an actual homework file (`.xlsx`/`.xlsm`/`.xls`, max
+8MB — keep `MAX_UPLOAD_BYTES` in sync between `Code.gs` and `app.js` if you
+change it) via the "⬆ ส่งไฟล์การบ้าน" button under the name field in the
+sidebar. Each file lands in Google Drive under **"Excel Power Query — การบ้าน
+ที่ส่ง (Student Submissions)" → &lt;student name&gt;/**, auto-created on first
+upload the same way the grade-book Sheet is. `FileUploads` just logs the
+metadata + a link to each file — it isn't the actual storage.
+
+**One-time extra step for file uploads:** the first time you deploy this
+version, the script needs to request Google Drive access, which it never
+needed before. In the Apps Script editor, pick `oneTimeAuthorizeDriveAccess`
+from the function dropdown, click **Run**, and click **Allow** on the
+permissions screen. Then bump the live deployment (**Deploy → Manage
+deployments → Edit → Deploy**) so the web app runs with the new permission.
+Until you do this, upload attempts fail with a clean "unauthorized" error —
+score/quiz syncing is unaffected either way.
 
 Each row is tagged with the name the student typed into "ชื่อของคุณ" in the
 sidebar (or "ไม่ระบุชื่อ" if they left it blank — there's no login, so this

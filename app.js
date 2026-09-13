@@ -206,6 +206,73 @@ function syncToBackend(type, payload) {
   }).catch(() => {}); // best-effort: the local save already happened regardless of network/CORS result
 }
 
+// ---- Homework file upload (goes straight to the GAS backend / Google Drive; no local fallback) ----
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // keep in sync with MAX_UPLOAD_BYTES in backend/Code.gs
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function recordUploadedFile(fileName, url) {
+  const list = stored("pq-uploaded-files", []);
+  list.unshift({ fileName, url, uploadedAt: Date.now() });
+  save("pq-uploaded-files", list.slice(0, 8));
+  renderUploadHistory();
+}
+
+function renderUploadHistory() {
+  const el = document.querySelector("#upload-history");
+  if (!el) return;
+  const list = stored("pq-uploaded-files", []);
+  el.innerHTML = list.map(f => `<li>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.fileName)}</a>` : `<span>${esc(f.fileName)}</span>`}<small>${esc(new Date(f.uploadedAt).toLocaleDateString("th-TH"))}</small></li>`).join("");
+}
+
+async function uploadHomeworkFile(file) {
+  const name = studentName();
+  if (!name) {
+    toast("กรุณากรอกชื่อของคุณก่อนส่งไฟล์");
+    document.querySelector("#student-name").focus();
+    return;
+  }
+  if (!GAS_ENDPOINT) {
+    toast("ยังไม่ได้เชื่อมต่อระบบรับไฟล์ ติดต่อผู้สอน");
+    return;
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    toast(`ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)}MB)`);
+    return;
+  }
+  const btn = document.querySelector("#upload-trigger");
+  btn.disabled = true;
+  btn.textContent = "กำลังส่งไฟล์...";
+  try {
+    const base64 = await readFileAsBase64(file);
+    const res = await fetch(GAS_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ type: "file", secret: GAS_SECRET, name, fileName: file.name, mimeType: file.type || "application/octet-stream", fileData: base64 }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      recordUploadedFile(file.name, data.url);
+      toast("ส่งไฟล์การบ้านสำเร็จ: " + file.name);
+    } else {
+      toast("ส่งไฟล์ไม่สำเร็จ: " + (data.error || "unknown error"));
+    }
+  } catch (err) {
+    console.error(err);
+    toast("ส่งไฟล์ไม่สำเร็จ ลองใหม่อีกครั้ง");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "⬆ ส่งไฟล์การบ้าน (Excel)";
+  }
+}
+
 function renderNav() {
   const chapterLinks = chapters.map(c => `<button class="nav-link" data-view="chapter" data-id="${c.id}"><span class="nav-number">${c.number}</span>${esc(c.title)}</button>`).join("");
   const exerciseLinks = exercisesData.map(e => `<button class="nav-link" data-view="exercise" data-id="${e.id}"><span class="nav-number">${String(e.id).padStart(2, "0")}</span>${esc(e.title)}</button>`).join("");
@@ -840,6 +907,13 @@ studentNameInput.addEventListener("change", () => {
   localStorage.setItem("pq-student-name", studentNameInput.value.trim());
   toast("บันทึกชื่อแล้ว");
 });
+document.querySelector("#upload-trigger").addEventListener("click", () => document.querySelector("#upload-input").click());
+document.querySelector("#upload-input").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  if (file) uploadHomeworkFile(file);
+  event.target.value = "";
+});
+renderUploadHistory();
 document.addEventListener("mousemove", event => {
   if (event.clientX <= 6 && !sidebarEl.classList.contains("open") && !sidebarEl.classList.contains("pinned")) setSidebarOpen(true);
 });

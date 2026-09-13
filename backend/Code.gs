@@ -20,13 +20,21 @@ const HEADERS = {
   followup: ["เวลา", "ชื่อนักเรียน", "คำตอบทั้งหมด (JSON)"],
   exercise: ["เวลา", "ชื่อนักเรียน", "แบบฝึกหัดที่", "คะแนน", "เต็ม", "ผ่านครบทุกข้อ", "รายละเอียด (JSON)"],
   workshop: ["เวลา", "ชื่อนักเรียน", "คะแนน", "เต็ม", "ผ่านครบทุกข้อ", "รายละเอียด (JSON)"],
+  file: ["เวลา", "ชื่อนักเรียน", "ชื่อไฟล์", "ขนาดไฟล์", "ลิงก์ไฟล์ใน Drive"],
 };
+
+// Max size for an uploaded homework file's base64 payload (bytes, decoded). Keep
+// in sync with MAX_UPLOAD_BYTES in app.js.
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
     if (SHARED_SECRET && body.secret !== SHARED_SECRET) {
       return jsonResponse({ ok: false, error: "unauthorized" });
+    }
+    if (body.type === "file") {
+      return handleFileUpload_(body);
     }
     const sheetName = HEADERS[body.type] ? capitalize_(body.type) : null;
     if (!sheetName) return jsonResponse({ ok: false, error: "unknown submission type: " + body.type });
@@ -37,6 +45,65 @@ function doPost(e) {
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err) });
   }
+}
+
+function handleFileUpload_(body) {
+  const name = (body.name || "").trim() || "ไม่ระบุชื่อ";
+  const fileName = (body.fileName || "homework").trim();
+  const mimeType = body.mimeType || "application/octet-stream";
+  const base64Data = body.fileData || "";
+  if (!base64Data) return jsonResponse({ ok: false, error: "no file data" });
+
+  const bytes = Utilities.base64Decode(base64Data);
+  if (bytes.length > MAX_UPLOAD_BYTES) {
+    return jsonResponse({ ok: false, error: "file too large (max " + (MAX_UPLOAD_BYTES / 1024 / 1024) + "MB)" });
+  }
+
+  const stamp = Utilities.formatDate(new Date(), "GMT+7", "yyyy-MM-dd_HHmmss");
+  const blob = Utilities.newBlob(bytes, mimeType, stamp + "_" + fileName);
+
+  const rootFolder = getOrCreateSubmissionsFolder_();
+  const studentFolder = getOrCreateChildFolder_(rootFolder, name);
+  const file = studentFolder.createFile(blob);
+
+  const sheet = getOrCreateSheet_("FileUploads", HEADERS.file);
+  sheet.appendRow([new Date(), name, fileName, Math.round(bytes.length / 1024) + " KB", file.getUrl()]);
+
+  return jsonResponse({ ok: true, url: file.getUrl() });
+}
+
+function getOrCreateSubmissionsFolder_() {
+  const props = PropertiesService.getScriptProperties();
+  const existingId = props.getProperty("SUBMISSIONS_FOLDER_ID");
+  if (existingId) {
+    try {
+      return DriveApp.getFolderById(existingId);
+    } catch (err) {
+      // fall through and provision a new one if the saved id no longer resolves
+    }
+  }
+  const folder = DriveApp.createFolder("Excel Power Query — การบ้านที่ส่ง (Student Submissions)");
+  props.setProperty("SUBMISSIONS_FOLDER_ID", folder.getId());
+  return folder;
+}
+
+function getOrCreateChildFolder_(parent, name) {
+  const existing = parent.getFoldersByName(name);
+  if (existing.hasNext()) return existing.next();
+  return parent.createFolder(name);
+}
+
+/**
+ * ONE-TIME SETUP after adding file-upload support: this script now calls
+ * DriveApp, a permission it never needed before, so the account running it
+ * must grant Drive access. In the Apps Script editor, pick this function
+ * ("oneTimeAuthorizeDriveAccess") from the function dropdown and click Run —
+ * a permissions screen will appear; click Allow. Do this once, then re-deploy
+ * (Deploy → Manage deployments → Edit → Deploy) so the live web app runs
+ * with the new permission. Skip if uploads already work.
+ */
+function oneTimeAuthorizeDriveAccess() {
+  DriveApp.getRootFolder();
 }
 
 function doGet(e) {

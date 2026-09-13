@@ -25,6 +25,11 @@
         <span>ชื่อของคุณ (สำหรับบันทึกคะแนน)</span>
         <input id="student-name" type="text" placeholder="ชื่อ-นามสกุล" autocomplete="name" />
       </label>
+      <div class="upload-field">
+        <button type="button" id="upload-trigger" class="upload-trigger-btn">⬆ ส่งไฟล์การบ้าน (Excel)</button>
+        <input type="file" id="upload-input" accept=".xlsx,.xlsm,.xls" hidden />
+        <ul id="upload-history" class="upload-history"></ul>
+      </div>
       <nav id="chapter-nav" aria-label="บทเรียน"></nav>
       <div class="sidebar-footer">
         <a href="#plan" data-view="plan">แผน 30 วัน</a>
