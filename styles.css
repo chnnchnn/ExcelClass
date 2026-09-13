@@ -200,6 +200,19 @@ p { margin: 0 0 14px; }
 .text-answer { width: 100%; margin-top: 8px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); }
 .muted { color: var(--muted); }
 
+/* Exercise/workshop self-check */
+.selfcheck-form { display: grid; gap: 10px; padding: 18px; background: var(--sky); border-radius: var(--radius); margin: 14px 0 24px; }
+.selfcheck-row { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 12px; align-items: center; }
+.selfcheck-row label { font-size: 14px; }
+.selfcheck-input-wrap { display: flex; align-items: center; gap: 8px; }
+.selfcheck-input-wrap input { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); }
+.selfcheck-unit { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.selfcheck-confirm { background: var(--surface); font-weight: 400; }
+.selfcheck-confirm em { font-style: normal; color: var(--muted); }
+.selfcheck-result { padding: 18px; background: var(--sky); border-radius: var(--radius); margin: 14px 0 24px; }
+.selfcheck-result.pass { background: color-mix(in srgb, var(--green) 14%, var(--surface)); }
+@media (max-width: 700px) { .selfcheck-row { grid-template-columns: 1fr; } }
+
 @media (max-width: 700px) {
   .slide-jump { margin-left: 0; max-width: 100%; width: 100%; }
   .slide-card { padding: 20px; }

@@ -109,11 +109,19 @@ function renderNav() {
   `;
 }
 
+function exercisesPassedCount() {
+  return exercisesData.filter(e => {
+    const data = stored(`pq-selfcheck-exercise-${e.id}`, null);
+    return data && data.results.length && data.results.every(Boolean);
+  }).length;
+}
+
 function renderHome() {
   const done = completed().length;
+  const exDone = exercisesPassedCount();
   const workspaceCards = [
     ["slides", null, "▤", "สไลด์บรรยาย", "87 แผ่นที่ใช้สอนจริงทั้ง 8 ชั่วโมง พร้อมโน้ตผู้สอนสรุปในทุกแผ่น"],
-    ["exercise", "1", "✎", "แบบฝึกหัด 7 ชุด", "ลงมือทำระหว่างเรียน พร้อมเกณฑ์ตรวจคำตอบด้วยตัวเองและเฉลยโค้ด M"],
+    ["exercise", "1", "✎", "แบบฝึกหัด 7 ชุด", `ลงมือทำระหว่างเรียน พร้อมตรวจการบ้านของคุณเองและเฉลยโค้ด M · ตรวจผ่านแล้ว ${exDone}/7`],
     ["workshop", null, "★", "Workshop สุดท้าย", "โจทย์รายงานยอดขายครึ่งปี ไทยเฟรช เทรดดิ้ง พร้อมเกณฑ์ประเมิน 100 คะแนน"],
     ["assessment", null, "✓", "แบบทดสอบและความมั่นใจ", "ทำก่อน–หลังเรียนเพื่อดูว่าความเข้าใจเปลี่ยนไปแค่ไหน"],
     ["datafiles", null, "⇩", "ไฟล์ฝึกปฏิบัติ", "ดาวน์โหลดชุดข้อมูลตัวอย่างของทุกบทเรียนไปฝึกกับ Excel จริง"],
@@ -244,6 +252,35 @@ function renderSlides(id) {
   </section>`;
 }
 
+function parseExpectedNumber(text) {
+  const m = /^([\d,]+(?:\.\d+)?)/.exec(String(text).trim());
+  if (!m) return null;
+  return { num: parseFloat(m[1].replace(/,/g, "")), unit: text.slice(m[0].length).trim() };
+}
+
+function selfCheckBlock(kind, id, checkRows) {
+  const key = `pq-selfcheck-${kind}-${id}`;
+  const rows = checkRows.slice(1);
+  const items = rows.map(r => ({ label: r[0], expected: r[1], parsed: parseExpectedNumber(r[1]) }));
+  const existing = stored(key, null);
+  if (existing) {
+    const correct = existing.results.filter(Boolean).length;
+    const allPass = correct === items.length;
+    return `<div class="selfcheck-result ${allPass ? "pass" : ""}">
+      <p><strong>ผลตรวจสอบของคุณ:</strong> ${correct} / ${items.length} ข้อตรงตามเกณฑ์ ${allPass ? "— ผ่านครบทุกข้อ ✓" : ""}</p>
+      <ol class="steps">${items.map((it, i) => `<li>${esc(it.label)}${it.parsed ? ` — คุณกรอก <strong>${esc(existing.inputs[i] || "-")}</strong>` : ""} ${existing.results[i] ? "✓" : `✗ <span class="muted">(เกณฑ์: ${esc(it.expected)})</span>`}</li>`).join("")}</ol>
+      <button type="button" class="ghost-button" data-action="retake-selfcheck" data-key="${key}">ตรวจใหม่</button>
+    </div>`;
+  }
+  return `<form class="selfcheck-form" data-selfcheck="${key}">
+    ${items.map((it, i) => it.parsed
+      ? `<div class="selfcheck-row"><label>${esc(it.label)}</label><div class="selfcheck-input-wrap"><input type="text" inputmode="decimal" name="v${i}" data-expected="${it.parsed.num}" placeholder="กรอกผลของคุณ" required /><span class="selfcheck-unit">${esc(it.parsed.unit)}</span></div></div>`
+      : `<label class="choice-row selfcheck-confirm"><input type="checkbox" name="v${i}" required /><span>${esc(it.label)} — <em>${esc(it.expected)}</em></span></label>`
+    ).join("")}
+    <button class="primary-button" type="submit" style="margin-top:12px">ตรวจคำตอบของฉัน</button>
+  </form>`;
+}
+
 function solutionsBlock(solutions) {
   if (!solutions || !solutions.length) return "";
   const inner = solutions.map(s => `<h4>${esc(s.label)}</h4>${codeBlock(s.code)}`).join("");
@@ -264,6 +301,9 @@ function renderExercise(id) {
   ${e.hint ? `<div class="side-note" style="position:static;margin:20px 0"><strong>คำใบ้</strong>${esc(e.hint)}</div>` : ""}
   <h3>เกณฑ์ตรวจคำตอบด้วยตัวเอง</h3>
   ${table(e.checks)}
+  <h4>ตรวจการบ้านของคุณ</h4>
+  <p class="lede" style="font-size:14px">ทำแบบฝึกหัดนี้เสร็จแล้ว? กรอกผลที่คุณได้จริงจาก Power Query เพื่อตรวจสอบและบันทึกไว้</p>
+  ${selfCheckBlock("exercise", e.id, e.checks)}
   ${e.hrCase ? `<h3>คำตอบของกรณีศึกษา HR</h3>${table(e.hrCase)}` : ""}
   ${e.challenge && e.challenge.length ? `<h3>ข้อท้าทายเพิ่มเติม</h3><ul>${e.challenge.map(c => `<li>${esc(c)}</li>`).join("")}</ul>` : ""}
   ${e.pitfalls && e.pitfalls.length ? `<div class="trap"><strong>จุดที่ผู้เรียนพลาดบ่อย</strong><ul style="margin:8px 0 0;padding-left:18px">${e.pitfalls.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>` : ""}
@@ -300,6 +340,9 @@ function renderWorkshop() {
   <ol class="steps">${w.diagnostics.map(d => `<li>${esc(d)}</li>`).join("")}</ol>
   <p>${esc(w.closing)}</p>
   <h3>เฉลย Workshop สุดท้าย</h3>
+  <h4>ตรวจการบ้านของคุณ</h4>
+  <p class="lede" style="font-size:14px">กรอกตัวเลขที่คุณได้จริงจากรายงานของคุณ เพื่อตรวจสอบและบันทึกไว้</p>
+  ${selfCheckBlock("workshop", "final", w.answerNumbers)}
   ${reveal("ดูตัวเลขคำตอบที่ถูกต้อง", "ซ่อนตัวเลขคำตอบ", table(w.answerNumbers))}
   <div style="margin-top:14px">${solutionsBlock(w.solutionCode)}</div>
   <h4 style="margin-top:24px">เมื่อตัวเลขของคุณไม่ตรงกับเฉลย</h4>
@@ -474,6 +517,7 @@ document.addEventListener("click", event => {
   if (target.dataset.action === "retake-quiz") { localStorage.removeItem(`pq-quiz-${target.dataset.mode}`); render(); return; }
   if (target.dataset.action === "retake-confidence") { localStorage.removeItem(`pq-confidence-${target.dataset.mode}`); render(); return; }
   if (target.dataset.action === "retake-followup") { localStorage.removeItem("pq-followup"); render(); return; }
+  if (target.dataset.action === "retake-selfcheck") { localStorage.removeItem(target.dataset.key); render(); return; }
   if (!target.dataset.view) return;
   event.preventDefault();
   if (target.dataset.view === "slide-start") { setViewHash("slides/1"); return; }
@@ -529,6 +573,25 @@ document.querySelector("#app").addEventListener("submit", event => {
     const answers = followupQuestions.map((q, i) => q.type === "multi" ? data.getAll(`f${i}`) : data.get(`f${i}`));
     save("pq-followup", { answers, savedAt: Date.now() });
     toast("บันทึกแบบติดตาม 30 วันแล้ว");
+    render();
+    return;
+  }
+  if (form.dataset.selfcheck) {
+    event.preventDefault();
+    const key = form.dataset.selfcheck;
+    const inputs = [];
+    const results = [];
+    [...form.querySelectorAll("input[name]")].forEach(inp => {
+      if (inp.type === "checkbox") { inputs.push(inp.checked ? "ยืนยันแล้ว" : ""); results.push(inp.checked); return; }
+      const val = inp.value.trim();
+      inputs.push(val);
+      const expectedNum = parseFloat(inp.dataset.expected);
+      const typedNum = parseFloat(val.replace(/,/g, ""));
+      results.push(!isNaN(typedNum) && Math.abs(typedNum - expectedNum) < 0.005);
+    });
+    save(key, { inputs, results, submittedAt: Date.now() });
+    const allPass = results.every(Boolean);
+    toast(allPass ? "ตรวจแล้ว — ผ่านครบทุกข้อ! 🎉" : "บันทึกผลตรวจสอบแล้ว");
     render();
   }
 });
