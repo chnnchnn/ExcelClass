@@ -123,10 +123,10 @@ function renderNav() {
   const chapterLinks = chapters.map(c => `<button class="nav-link" data-view="chapter" data-id="${c.id}"><span class="nav-number">${c.number}</span>${esc(c.title)}</button>`).join("");
   const exerciseLinks = exercisesData.map(e => `<button class="nav-link" data-view="exercise" data-id="${e.id}"><span class="nav-number">${String(e.id).padStart(2, "0")}</span>${esc(e.title)}</button>`).join("");
   document.querySelector("#chapter-nav").innerHTML = `
-    <div class="nav-group-label">คู่มือผู้เรียน · 7 บท</div>
-    ${chapterLinks}
     <div class="nav-group-label">ห้องเรียน</div>
     <button class="nav-link" data-view="slides"><span class="nav-number">▤</span>สไลด์บรรยาย (87 แผ่น)</button>
+    <div class="nav-group-label">คู่มือผู้เรียน · 7 บท</div>
+    ${chapterLinks}
     <div class="nav-group-label">แบบฝึกหัด · 7 ชุด</div>
     ${exerciseLinks}
     <button class="nav-link" data-view="workshop"><span class="nav-number">★</span>Workshop สุดท้าย</button>
