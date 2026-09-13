@@ -95,7 +95,7 @@ const MASCOT_REFRESH_URL = "https://liff.line.me/2011577141-9ukdVg3q";
 // Google Apps Script grade-book backend — see backend/README.md to deploy your own
 // and paste the resulting Web App URL here. Left blank, the site works exactly as
 // before and only saves scores to the visitor's own browser.
-const GAS_ENDPOINT = "";
+const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyXsgFK0t5oAWXWs_BmgZOnfULBSOo66UJTae3MehYl_QVKoqaj8yfl4m9TSaVBAAv75w/exec";
 const GAS_SECRET = "";
 
 function studentName() {

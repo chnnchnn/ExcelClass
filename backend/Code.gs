@@ -2,10 +2,11 @@
  * Excel Power Query — Class Workspace backend
  *
  * Receives score/self-check submissions posted from the static site
- * (app.js -> syncToBackend) and appends them as rows to sheets in the
- * spreadsheet this script is bound to. Deploy as a Web App (Execute as: Me,
- * Who has access: Anyone) and paste the resulting /exec URL into GAS_ENDPOINT
- * in app.js on the site. See README.md in this folder for full steps.
+ * (app.js -> syncToBackend) and appends them as rows to a Google Sheet.
+ * The sheet is created automatically on first submission (see
+ * getOrCreateSpreadsheet_) — no manual binding needed. Deploy as a Web App
+ * (Execute as: Me, Who has access: Anyone) and paste the resulting /exec URL
+ * into GAS_ENDPOINT in app.js on the site. See README.md in this folder.
  */
 
 // Must match GAS_SECRET in app.js. Change this to your own value before
@@ -39,7 +40,10 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return ContentService.createTextOutput("Excel Power Query class backend is running.").setMimeType(ContentService.MimeType.TEXT);
+  const ss = getOrCreateSpreadsheet_();
+  return ContentService.createTextOutput(
+    "Excel Power Query class backend is running.\nGrade book: " + ss.getUrl()
+  ).setMimeType(ContentService.MimeType.TEXT);
 }
 
 function buildRow_(type, body) {
@@ -61,8 +65,23 @@ function buildRow_(type, body) {
   }
 }
 
+function getOrCreateSpreadsheet_() {
+  const props = PropertiesService.getScriptProperties();
+  const existingId = props.getProperty("SHEET_ID");
+  if (existingId) {
+    try {
+      return SpreadsheetApp.openById(existingId);
+    } catch (err) {
+      // fall through and provision a new one if the saved id no longer resolves
+    }
+  }
+  const ss = SpreadsheetApp.create("Excel Power Query — Grade Book");
+  props.setProperty("SHEET_ID", ss.getId());
+  return ss;
+}
+
 function getOrCreateSheet_(name, headers) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getOrCreateSpreadsheet_();
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
