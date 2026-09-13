@@ -96,7 +96,7 @@ const MASCOT_REFRESH_URL = "https://liff.line.me/2011577141-9ukdVg3q";
 // and paste the resulting Web App URL here. Left blank, the site works exactly as
 // before and only saves scores to the visitor's own browser.
 const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyXsgFK0t5oAWXWs_BmgZOnfULBSOo66UJTae3MehYl_QVKoqaj8yfl4m9TSaVBAAv75w/exec";
-const GAS_SECRET = "";
+const GAS_SECRET = "8cdec58aa71b2346b8ad9ef149185808";
 
 function studentName() {
   return (localStorage.getItem("pq-student-name") || "").trim();
@@ -292,6 +292,7 @@ function selfCheckBlock(kind, id, checkRows) {
     </div>`;
   }
   return `<form class="selfcheck-form" data-selfcheck="${key}">
+    ${nameFieldHtml()}
     ${items.map((it, i) => it.parsed
       ? `<div class="selfcheck-row"><label>${esc(it.label)}</label><div class="selfcheck-input-wrap"><input type="text" inputmode="decimal" name="v${i}" data-expected="${it.parsed.num}" placeholder="กรอกผลของคุณ" required /><span class="selfcheck-unit">${esc(it.parsed.unit)}</span></div></div>`
       : `<label class="choice-row selfcheck-confirm"><input type="checkbox" name="v${i}" required /><span>${esc(it.label)} — <em>${esc(it.expected)}</em></span></label>`
@@ -371,21 +372,28 @@ function renderWorkshop() {
 
 function quizState(mode) { return stored(`pq-quiz-${mode}`, null); }
 
+function quizModeLabel(mode) { return mode === "pre" ? "ก่อนเรียน (Pre-test)" : "หลังเรียน (Post-test)"; }
+
+function quizReviewHtml(existing, mode) {
+  const other = quizState(mode === "pre" ? "post" : "pre");
+  return `<p><strong>คะแนนของคุณ (${esc(quizModeLabel(mode))}):</strong> ${existing.score} / ${quizQuestions.length} — เลือก "ยังไม่ทราบ" ${existing.unknown} ข้อ</p>
+      ${other ? `<p>เทียบกับอีกรอบ: ${other.score} / ${quizQuestions.length} (${mode === "pre" ? "หลังเรียน" : "ก่อนเรียน"}) — ส่วนต่าง ${mode === "pre" ? other.score - existing.score : existing.score - other.score} คะแนน</p>` : ""}
+      <h4>เฉลยและทบทวนรายข้อ</h4>
+      <ol class="steps">${quizQuestions.map((q, i) => `<li><strong>${esc(q.q)}</strong><br>คำตอบของคุณ: ${esc(q.choices[existing.answers[i]] ?? "ไม่ได้ตอบ")} ${existing.answers[i] === q.answer ? "✓ ถูกต้อง" : `✗ คำตอบที่ถูกคือ "${esc(q.choices[q.answer])}"`}<br><small class="muted">วัด: ${esc(q.topic)} (ชั่วโมงที่ ${esc(q.hour)})</small></li>`).join("")}</ol>`;
+}
+
 function renderQuizTab(mode) {
   const existing = quizState(mode);
-  const modeLabel = mode === "pre" ? "ก่อนเรียน (Pre-test)" : "หลังเรียน (Post-test)";
-  const other = quizState(mode === "pre" ? "post" : "pre");
+  const modeLabel = quizModeLabel(mode);
   let resultHtml = "";
   if (existing) {
     resultHtml = `<div class="quiz-result">
-      <p><strong>คะแนนของคุณ (${esc(modeLabel)}):</strong> ${existing.score} / ${quizQuestions.length} — เลือก "ยังไม่ทราบ" ${existing.unknown} ข้อ</p>
-      ${other ? `<p>เทียบกับอีกรอบ: ${other.score} / ${quizQuestions.length} (${mode === "pre" ? "หลังเรียน" : "ก่อนเรียน"}) — ส่วนต่าง ${mode === "pre" ? other.score - existing.score : existing.score - other.score} คะแนน</p>` : ""}
-      <h4>ทบทวนรายข้อ</h4>
-      <ol class="steps">${quizQuestions.map((q, i) => `<li><strong>${esc(q.q)}</strong><br>คำตอบของคุณ: ${esc(q.choices[existing.answers[i]] ?? "ไม่ได้ตอบ")} ${existing.answers[i] === q.answer ? "✓ ถูกต้อง" : `✗ คำตอบที่ถูกคือ "${esc(q.choices[q.answer])}"`}<br><small class="muted">วัด: ${esc(q.topic)} (ชั่วโมงที่ ${esc(q.hour)})</small></li>`).join("")}</ol>
+      ${quizReviewHtml(existing, mode)}
       <button type="button" class="ghost-button" data-action="retake-quiz" data-mode="${mode}">ทำแบบทดสอบชุดนี้ใหม่</button>
     </div>`;
   } else {
     resultHtml = `<form id="quiz-form" data-mode="${mode}">
+      ${nameFieldHtml()}
       <ol class="steps">${quizQuestions.map((q, i) => `<li><strong>${esc(q.q)}</strong>
         <div class="choice-list">${q.choices.map((c, ci) => `<label class="choice-row"><input type="radio" name="q${i}" value="${ci}" required>${esc(c)}</label>`).join("")}</div>
       </li>`).join("")}</ol>
@@ -395,19 +403,25 @@ function renderQuizTab(mode) {
   return `<div class="quiz-intro"><p>${esc(assessmentIntro.why)}</p></div>${resultHtml}`;
 }
 
+function confidenceReviewHtml(existing, mode) {
+  const modeLabel = mode === "pre" ? "ก่อนเรียน" : "หลังเรียน";
+  const avg = (existing.ratings.reduce((a, b) => a + b, 0) / existing.ratings.length).toFixed(1);
+  return `<p><strong>ความมั่นใจเฉลี่ย (${esc(modeLabel)}):</strong> ${avg} / 5</p>
+    <ol class="steps">${confidenceItems.map((c, i) => `<li>${esc(c)} — <strong>${existing.ratings[i]} / 5</strong></li>`).join("")}</ol>
+    ${existing.intention ? `<p><strong>ความตั้งใจนำไปใช้:</strong> ${existing.intention.score} / 5<br>งานที่ตั้งใจจะทำ: ${esc(existing.intention.project || "-")}<br>สิ่งที่อาจทำให้ไม่ได้ลงมือ: ${esc(existing.intention.blocker || "-")}</p>` : ""}`;
+}
+
 function renderConfidenceTab(mode) {
   const key = `pq-confidence-${mode}`;
   const existing = stored(key, null);
   const modeLabel = mode === "pre" ? "ก่อนเรียน" : "หลังเรียน";
   if (existing) {
-    const avg = (existing.ratings.reduce((a, b) => a + b, 0) / existing.ratings.length).toFixed(1);
-    return `<div class="quiz-result"><p><strong>ความมั่นใจเฉลี่ย (${esc(modeLabel)}):</strong> ${avg} / 5</p>
-    <ol class="steps">${confidenceItems.map((c, i) => `<li>${esc(c)} — <strong>${existing.ratings[i]} / 5</strong></li>`).join("")}</ol>
-    ${existing.intention ? `<p><strong>ความตั้งใจนำไปใช้:</strong> ${existing.intention.score} / 5<br>งานที่ตั้งใจจะทำ: ${esc(existing.intention.project || "-")}<br>สิ่งที่อาจทำให้ไม่ได้ลงมือ: ${esc(existing.intention.blocker || "-")}</p>` : ""}
+    return `<div class="quiz-result">${confidenceReviewHtml(existing, mode)}
     <button type="button" class="ghost-button" data-action="retake-confidence" data-mode="${mode}">ทำแบบประเมินนี้ใหม่</button>
     </div>`;
   }
   return `<form id="confidence-form" data-mode="${mode}">
+    ${nameFieldHtml()}
     <p class="lede" style="font-size:14px">ให้คะแนนความมั่นใจของคุณในแต่ละข้อ 1 = ทำไม่ได้เลย และ 5 = ทำได้เองอย่างมั่นใจ</p>
     <ol class="steps">${confidenceItems.map((c, i) => `<li>ฉันสามารถ...${esc(c)}
       <div class="scale-row">${[1, 2, 3, 4, 5].map(v => `<label class="scale-choice"><input type="radio" name="c${i}" value="${v}" required>${v}</label>`).join("")}</div>
@@ -430,6 +444,7 @@ function renderFollowupTab() {
     </div>`;
   }
   return `<form id="followup-form">
+    ${nameFieldHtml()}
     <ol class="steps">${followupQuestions.map((q, i) => {
       if (q.type === "text") return `<li>${esc(q.q)}<input name="f${i}" class="text-answer" /></li>`;
       const inputType = q.type === "multi" ? "checkbox" : "radio";
@@ -485,6 +500,26 @@ function renderSearch(term) {
 }
 
 function toast(message) { const el = document.querySelector("#toast-template").content.firstElementChild.cloneNode(true); el.textContent = message; document.body.append(el); setTimeout(() => el.remove(), 2400); }
+
+function showModal(html) {
+  document.querySelector("#modal-content").innerHTML = html;
+  document.querySelector("#modal-overlay").classList.add("show");
+}
+function hideModal() {
+  document.querySelector("#modal-overlay").classList.remove("show");
+  document.querySelector("#modal-content").innerHTML = "";
+}
+
+const nameFieldHtml = () => `<div class="field full required" style="margin-bottom:20px"><label>ชื่อผู้ทำ</label><input name="_takerName" required placeholder="ชื่อ-นามสกุล" value="${esc(studentName())}" /></div>`;
+function captureTakerName(data) {
+  const name = (data.get("_takerName") || "").trim();
+  if (name) {
+    localStorage.setItem("pq-student-name", name);
+    const sidebarInput = document.querySelector("#student-name");
+    if (sidebarInput) sidebarInput.value = name;
+  }
+  return name;
+}
 function render() {
   const hash = location.hash.replace("#", "");
   const parts = hash.split("/");
@@ -564,19 +599,26 @@ document.querySelector("#app").addEventListener("submit", event => {
     event.preventDefault();
     const mode = form.dataset.mode;
     const data = new FormData(form);
+    captureTakerName(data);
     const answers = quizQuestions.map((q, i) => parseInt(data.get(`q${i}`), 10));
     const score = answers.filter((a, i) => a === quizQuestions[i].answer).length;
     const unknown = answers.filter(a => a === 4).length;
-    save(`pq-quiz-${mode}`, { answers, score, unknown, savedAt: Date.now() });
+    const record = { answers, score, unknown, savedAt: Date.now() };
+    save(`pq-quiz-${mode}`, record);
     syncToBackend("quiz", { mode, score, total: quizQuestions.length, unknown, answers });
     toast("บันทึกผลแบบทดสอบแล้ว");
     render();
+    const allCorrect = score === quizQuestions.length;
+    showModal(`<h2>ผลแบบทดสอบ (${esc(quizModeLabel(mode))})</h2>
+      <div class="modal-score ${allCorrect ? "pass" : ""}">${score} / ${quizQuestions.length} คะแนน</div>
+      ${quizReviewHtml(record, mode)}`);
     return;
   }
   if (form.id === "confidence-form") {
     event.preventDefault();
     const mode = form.dataset.mode;
     const data = new FormData(form);
+    captureTakerName(data);
     const ratings = confidenceItems.map((c, i) => parseInt(data.get(`c${i}`), 10));
     const payload = { ratings, savedAt: Date.now() };
     if (mode === "post") {
@@ -587,11 +629,15 @@ document.querySelector("#app").addEventListener("submit", event => {
     syncToBackend("confidence", { mode, average, intentionScore: payload.intention ? payload.intention.score : "", project: payload.intention ? payload.intention.project : "", blocker: payload.intention ? payload.intention.blocker : "" });
     toast("บันทึกแบบประเมินความมั่นใจแล้ว");
     render();
+    showModal(`<h2>ผลแบบประเมินความมั่นใจ</h2>
+      <div class="modal-score">${average} / 5 เฉลี่ย</div>
+      ${confidenceReviewHtml(payload, mode)}`);
     return;
   }
   if (form.id === "followup-form") {
     event.preventDefault();
     const data = new FormData(form);
+    captureTakerName(data);
     const answers = followupQuestions.map((q, i) => q.type === "multi" ? data.getAll(`f${i}`) : data.get(`f${i}`));
     save("pq-followup", { answers, savedAt: Date.now() });
     syncToBackend("followup", { answers });
@@ -602,9 +648,10 @@ document.querySelector("#app").addEventListener("submit", event => {
   if (form.dataset.selfcheck) {
     event.preventDefault();
     const key = form.dataset.selfcheck;
+    captureTakerName(new FormData(form));
     const inputs = [];
     const results = [];
-    [...form.querySelectorAll("input[name]")].forEach(inp => {
+    [...form.querySelectorAll('input[name]:not([name="_takerName"])')].forEach(inp => {
       if (inp.type === "checkbox") { inputs.push(inp.checked ? "ยืนยันแล้ว" : ""); results.push(inp.checked); return; }
       const val = inp.value.trim();
       inputs.push(val);
@@ -675,6 +722,9 @@ function setDensity(mode) {
 setDensity(localStorage.getItem("pq-density") || "compact");
 
 document.querySelector("#theme-button").addEventListener("click", () => { const next = document.documentElement.dataset.theme === "dark" ? "" : "dark"; document.documentElement.dataset.theme = next; localStorage.setItem("pq-theme", next); });
+document.querySelector("#modal-close").addEventListener("click", hideModal);
+document.querySelector("#modal-overlay").addEventListener("click", (event) => { if (event.target.id === "modal-overlay") hideModal(); });
+document.addEventListener("keydown", (event) => { if (event.key === "Escape") hideModal(); });
 document.documentElement.dataset.theme = localStorage.getItem("pq-theme") || "";
 window.addEventListener("hashchange", render);
 render();

@@ -264,3 +264,13 @@ p { margin: 0 0 14px; }
 :root[data-density="compact"] .workspace-card { padding: 13px; gap: 3px; }
 :root[data-density="compact"] .plan-grid { margin: 16px 0 28px; }
 :root[data-density="compact"] .week { padding: 13px; min-height: unset; }
+
+/* Result popup modal */
+.modal-overlay { display: none; position: fixed; inset: 0; z-index: 20; background: rgba(10, 16, 12, .55); align-items: center; justify-content: center; padding: 24px; }
+.modal-overlay.show { display: flex; }
+.modal-box { position: relative; width: min(640px, 100%); max-height: 85vh; overflow-y: auto; background: var(--surface); color: var(--ink); border-radius: 14px; padding: 32px clamp(20px, 4vw, 36px); box-shadow: 0 24px 60px #0005; }
+.modal-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 50%; background: var(--paper); color: var(--ink); font-size: 15px; }
+.modal-box h2 { margin-top: 0; }
+.modal-score { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; background: var(--sky); font-size: 20px; font-weight: 700; margin: 8px 0 18px; }
+.modal-score.pass { background: color-mix(in srgb, var(--green) 16%, var(--surface)); color: var(--green-dark); }
+.field.required label::after { content: " *"; color: var(--red); }

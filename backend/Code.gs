@@ -12,7 +12,7 @@
 // Must match GAS_SECRET in app.js. Change this to your own value before
 // deploying — it is only a light deterrent (it ships inside the public page
 // source), not real access control. Leave both sides "" to disable the check.
-const SHARED_SECRET = "";
+const SHARED_SECRET = "8cdec58aa71b2346b8ad9ef149185808";
 
 const HEADERS = {
   quiz: ["เวลา", "ชื่อนักเรียน", "รอบ (pre/post)", "คะแนน", "เต็ม", "ยังไม่ทราบ (ข้อ)", "รายละเอียดคำตอบ (JSON)"],
