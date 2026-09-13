@@ -193,7 +193,8 @@ async function downloadHandbookPdf() {
 const WB_CANVAS_WIDTH = 1600;
 const WB_CANVAS_HEIGHT = 900;
 const WHITEBOARD_COLORS = ["#111111", "#d95d45", "#217346", "#1a73e8", "#f6a609", "#7a3ff0"];
-let wbStrokes = []; // {tool:'pen'|'eraser', color, size, points:[{x,y}]} — kept in memory so switching tabs and back doesn't lose the drawing
+let wbPages = [[]]; // each page is an array of strokes {tool:'pen'|'eraser', color, size, points:[{x,y}]} — kept in memory so switching tabs and back doesn't lose the drawing
+let wbActivePage = 0;
 let wbCurrentStroke = null;
 let wbDrawing = false;
 let wbTool = "pen";
@@ -201,6 +202,7 @@ let wbColor = WHITEBOARD_COLORS[0];
 let wbSize = 4;
 
 function wbCanvasEl() { return document.querySelector("#wb-canvas"); }
+function wbStrokesRef() { return wbPages[wbActivePage]; }
 
 function wbPointFromEvent(e, canvas) {
   const rect = canvas.getBoundingClientRect();
@@ -245,7 +247,7 @@ function wbRedraw() {
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  wbStrokes.forEach(stroke => wbDrawStroke(ctx, stroke));
+  wbStrokesRef().forEach(stroke => wbDrawStroke(ctx, stroke));
 }
 
 function wbApplyToolUI() {
@@ -282,21 +284,41 @@ function wbHandlePointerMove(e) {
 function wbHandlePointerUp() {
   if (!wbDrawing || !wbCurrentStroke) return;
   wbDrawing = false;
-  wbStrokes.push(wbCurrentStroke);
+  wbStrokesRef().push(wbCurrentStroke);
   if (wbCurrentStroke.points.length === 1) wbRedraw(); // draw the dot for a plain click/tap
   wbCurrentStroke = null;
 }
 
 function wbUndo() {
-  if (!wbStrokes.length) return;
-  wbStrokes.pop();
+  const strokes = wbStrokesRef();
+  if (!strokes.length) return;
+  strokes.pop();
   wbRedraw();
 }
 function wbClear() {
-  if (!wbStrokes.length) return;
+  if (!wbStrokesRef().length) return;
   if (!confirm("ล้างกระดานทั้งหมดใช่หรือไม่? เนื้อหาที่ยังไม่ได้บันทึกจะหายไป")) return;
-  wbStrokes = [];
+  wbPages[wbActivePage] = [];
   wbRedraw();
+}
+
+function wbSwitchPage(index) {
+  if (index === wbActivePage || index < 0 || index >= wbPages.length) return;
+  wbActivePage = index;
+  render();
+}
+function wbAddPage() {
+  wbPages.push([]);
+  wbActivePage = wbPages.length - 1;
+  render();
+}
+function wbClosePage(index) {
+  if (wbPages.length <= 1) return;
+  if (!confirm(`ลบหน้า ${index + 1} ใช่หรือไม่? เนื้อหาในหน้านี้จะหายไป`)) return;
+  wbPages.splice(index, 1);
+  if (index < wbActivePage) wbActivePage -= 1;
+  else if (index === wbActivePage) wbActivePage = Math.min(wbActivePage, wbPages.length - 1);
+  render();
 }
 
 function wbTimestampLabel() {
@@ -356,6 +378,15 @@ function initWhiteboardCanvas() {
   document.querySelector("#wb-clear").addEventListener("click", wbClear);
   document.querySelector("#wb-save-png").addEventListener("click", wbSavePng);
   document.querySelector("#wb-save-pdf").addEventListener("click", wbSavePdf);
+  document.querySelectorAll(".wb-tab").forEach(btn => btn.addEventListener("click", (e) => {
+    if (e.target.closest(".wb-tab-close")) return;
+    wbSwitchPage(Number(btn.dataset.wbPage));
+  }));
+  document.querySelectorAll(".wb-tab-close").forEach(btn => btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    wbClosePage(Number(btn.dataset.wbClosePage));
+  }));
+  document.querySelector("#wb-add-page").addEventListener("click", wbAddPage);
 
   wbApplyToolUI();
   wbApplyColorUI();
@@ -1016,6 +1047,10 @@ function renderDataFiles() {
 
 function renderWhiteboard() {
   return `<section class="whiteboard-page">
+    <div class="wb-tabs" role="tablist" aria-label="หน้าไวท์บอร์ด">
+      ${wbPages.map((_, i) => `<button type="button" class="wb-tab ${i === wbActivePage ? "active" : ""}" data-wb-page="${i}" role="tab" aria-selected="${i === wbActivePage}">หน้า ${i + 1}${wbPages.length > 1 ? `<span class="wb-tab-close" data-wb-close-page="${i}" title="ลบหน้านี้">✕</span>` : ""}</button>`).join("")}
+      <button type="button" class="wb-tab-add" id="wb-add-page" title="เพิ่มหน้าใหม่" aria-label="เพิ่มหน้าใหม่">+</button>
+    </div>
     <div class="whiteboard-toolbar">
       <div class="wb-group" role="group" aria-label="เครื่องมือวาด">
         <button type="button" class="wb-tool" data-wb-tool="pen">✏️ ปากกา</button>

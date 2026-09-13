@@ -326,7 +326,14 @@ p { margin: 0 0 14px; }
 @media (max-width: 580px) { .chat-panel { width: 100%; } }
 
 /* Whiteboard */
-.whiteboard-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 18px 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.wb-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 18px 0 0; }
+.wb-tab { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-bottom: none; border-radius: 8px 8px 0 0; background: var(--paper); color: var(--muted); padding: 8px 12px; font-weight: 600; font-size: 13px; }
+.wb-tab.active { background: var(--surface); color: var(--green-dark); }
+.wb-tab-close { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; color: var(--muted); font-size: 11px; }
+.wb-tab-close:hover { background: var(--red); color: #fff; }
+.wb-tab-add { border: 1px dashed var(--line); border-radius: 8px; background: transparent; color: var(--muted); width: 32px; height: 32px; font-size: 16px; font-weight: 700; line-height: 1; }
+.wb-tab-add:hover { border-color: var(--green); color: var(--green); }
+.whiteboard-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 0 0 18px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 .wb-group { display: flex; align-items: center; gap: 6px; }
 .wb-tool { border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); padding: 8px 12px; font-weight: 600; font-size: 14px; }
 .wb-tool.active { border-color: var(--green); color: var(--green); background: color-mix(in srgb, var(--green) 10%, var(--surface)); }
