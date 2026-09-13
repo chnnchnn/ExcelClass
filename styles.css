@@ -311,3 +311,22 @@ p { margin: 0 0 14px; }
 .pdf-export-root .data-table th { background: #e3f1e9; }
 .pdf-export-root .trap { border-color: #e8a99c; background: #fdf1ee; }
 .pdf-export-root .side-note { background: #eef7d9; }
+
+/* Class Agenda — colors match the source Excel's schedule table */
+.agenda-table-wrap { overflow-x: auto; margin: 22px 0 20px; border-radius: 8px; }
+.agenda-table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 13px; background: #fff; }
+.agenda-table th { background: #9fc5e8; color: #12233c; font-weight: 700; padding: 12px 14px; text-align: left; border: 1px solid #82add4; }
+.agenda-table td { padding: 10px 14px; border: 1px solid #d8dee3; vertical-align: top; color: #23272b; }
+.agenda-session-cell { text-align: center; vertical-align: middle; font-size: 13px; min-width: 150px; }
+.agenda-session-cell small { display: block; color: #4b5259; font-weight: 400; font-size: 11px; margin-top: 3px; }
+.agenda-hour-cell { color: #0563c1; font-weight: 700; white-space: nowrap; }
+.agenda-duration-cell { white-space: nowrap; color: #4b5259; font-size: 12px; }
+.agenda-table tr.agenda-session-a td { background: #fbe5d6; }
+.agenda-table tr.agenda-session-b td { background: #deebf7; }
+.agenda-table tr.agenda-break-row td { background: #d9d9d9 !important; color: #595959; font-style: italic; text-align: center; }
+.agenda-legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 13px; color: var(--muted); }
+.agenda-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.agenda-swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; border: 1px solid #0002; }
+.agenda-swatch.agenda-session-a { background: #fbe5d6; }
+.agenda-swatch.agenda-session-b { background: #deebf7; }
+.agenda-swatch-break { background: #d9d9d9; }

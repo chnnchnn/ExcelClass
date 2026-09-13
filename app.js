@@ -211,6 +211,7 @@ function renderNav() {
   const exerciseLinks = exercisesData.map(e => `<button class="nav-link" data-view="exercise" data-id="${e.id}"><span class="nav-number">${String(e.id).padStart(2, "0")}</span>${esc(e.title)}</button>`).join("");
   document.querySelector("#chapter-nav").innerHTML = `
     <div class="nav-group-label">ห้องเรียน</div>
+    <button class="nav-link" data-view="agenda"><span class="nav-number">📅</span>Class Agenda</button>
     <button class="nav-link" data-view="slides"><span class="nav-number">▤</span>สไลด์บรรยาย (87 แผ่น)</button>
     <div class="nav-group-label">คู่มือผู้เรียน · 7 บท</div>
     ${chapterLinks}
@@ -320,6 +321,27 @@ function renderSlideJump(currentN) {
   const appendixSection = sections[sections.length - 1];
   html += optgroupFor(appendixSection.title, appendixSection.slides);
   return `<select id="slide-jump" class="slide-jump">${html}</select>`;
+}
+
+function renderAgendaPage() {
+  const sessionColors = ["agenda-session-a", "agenda-session-b"];
+  const bodyHtml = courseAgenda.map((sess, sIdx) => sess.items.map((it, idx) => {
+    const sessionCell = idx === 0
+      ? `<td class="agenda-session-cell ${sessionColors[sIdx]}" rowspan="${sess.items.length}"><strong>${esc(sess.session)}</strong><br><small>${esc(sess.sessionEn)}</small></td>`
+      : "";
+    if (it.break) {
+      return `<tr class="agenda-break-row ${sessionColors[sIdx]}">${sessionCell}<td colspan="4">☕ พัก ${esc(it.duration)}</td></tr>`;
+    }
+    return `<tr class="agenda-hour-row ${sessionColors[sIdx]}">${sessionCell}<td class="agenda-hour-cell">ชั่วโมงที่ ${it.hour}</td><td>${esc(it.objective)}</td><td>${esc(it.activity)}</td><td class="agenda-duration-cell">${esc(it.duration)}</td></tr>`;
+  }).join("")).join("");
+
+  return `<section><div class="eyebrow">ห้องเรียน</div><h1>Class Agenda</h1><p class="lede">ตารางเวลาการสอนแบบเต็มวัน จัดสีตามช่วงเช้า/บ่ายเหมือนไฟล์ตารางต้นแบบของหลักสูตร — ${esc(hostVenue.label)}</p>
+  <div class="agenda-table-wrap"><table class="agenda-table">
+    <thead><tr><th>Session</th><th>Hour</th><th>Learning Objective</th><th>Key Activity / Exercise</th><th>Duration</th></tr></thead>
+    <tbody>${bodyHtml}</tbody>
+  </table></div>
+  <div class="agenda-legend"><span><i class="agenda-swatch agenda-session-a"></i>Day 1 ช่วงเช้า</span><span><i class="agenda-swatch agenda-session-b"></i>Day 1 ช่วงบ่าย</span><span><i class="agenda-swatch agenda-swatch-break"></i>พัก</span></div>
+  </section>`;
 }
 
 function renderSlides(id) {
@@ -628,7 +650,7 @@ function render() {
   const active = view === "chapter" || view === "exercise" ? id : (view === "slides" ? "" : "");
   document.querySelectorAll(".nav-link").forEach(el => {
     const isChapterOrExercise = (el.dataset.view === "chapter" || el.dataset.view === "exercise") && el.dataset.view === view;
-    const isSingle = ["slides", "workshop", "assessment", "datafiles"].includes(el.dataset.view) && el.dataset.view === view;
+    const isSingle = ["agenda", "slides", "workshop", "assessment", "datafiles"].includes(el.dataset.view) && el.dataset.view === view;
     el.classList.toggle("active", (isChapterOrExercise && el.dataset.id === id) || isSingle);
   });
   app.innerHTML =
@@ -636,6 +658,7 @@ function render() {
     view === "plan" ? renderPlan() :
     view === "cheatsheet" ? renderCheatsheet() :
     view === "troubleshoot" ? renderTroubleshoot() :
+    view === "agenda" ? renderAgendaPage() :
     view === "slides" ? renderSlides(id) :
     view === "exercise" ? renderExercise(id) :
     view === "workshop" ? renderWorkshop() :
