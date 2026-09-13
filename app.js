@@ -257,6 +257,7 @@ let chatLastId = 0;
 let chatLoaded = false;
 let chatUnreadCount = 0;
 let chatFetchInFlight = false;
+let chatSendInFlight = false;
 
 function formatChatTime(iso) {
   try {
@@ -323,6 +324,7 @@ async function fetchChatMessages() {
 }
 
 async function sendChatMessage(text) {
+  if (chatSendInFlight) return; // guards against Enter + then clicking "ส่ง" again before the first request finishes
   const name = studentName();
   if (!name) {
     toast("กรุณากรอกชื่อของคุณก่อนแชท");
@@ -334,8 +336,11 @@ async function sendChatMessage(text) {
     toast("ยังไม่ได้เชื่อมต่อระบบแชท ติดต่อผู้สอน");
     return;
   }
+  chatSendInFlight = true;
   const input = document.querySelector("#chat-input");
+  const sendBtn = document.querySelector("#chat-form button[type=submit]");
   input.disabled = true;
+  sendBtn.disabled = true;
   try {
     const res = await fetch(GAS_ENDPOINT, {
       method: "POST",
@@ -352,7 +357,9 @@ async function sendChatMessage(text) {
   } catch (err) {
     toast("ส่งข้อความไม่สำเร็จ ลองใหม่อีกครั้ง");
   } finally {
+    chatSendInFlight = false;
     input.disabled = false;
+    sendBtn.disabled = false;
     input.focus();
   }
 }
