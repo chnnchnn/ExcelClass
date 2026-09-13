@@ -50,15 +50,11 @@ body.sidebar-pinned main { margin-left: 272px; }
 .pin-button:hover { opacity: 1; }
 .pin-button[aria-pressed="true"] { background: var(--lime); color: #1b3f2b; border-color: var(--lime); opacity: 1; }
 #chapter-nav { display: grid; gap: 3px; }
-.nav-link, .sidebar-footer a { border: 0; background: none; text-align: left; color: #c3d4c6; padding: 9px 10px; border-radius: 6px; text-decoration: none; font-size: 14px; }
-.nav-link:hover, .nav-link.active, .sidebar-footer a:hover { color: #fff; background: rgba(255,255,255,.1); }
+.nav-link, .sidebar-footer a, .sidebar-footer button { border: 0; background: none; text-align: left; color: #c3d4c6; padding: 9px 10px; border-radius: 6px; text-decoration: none; font-size: 14px; width: 100%; cursor: pointer; }
+.nav-link:hover, .nav-link.active, .sidebar-footer a:hover, .sidebar-footer button:hover { color: #fff; background: rgba(255,255,255,.1); }
 .nav-number { width: 24px; display: inline-block; color: #82c69a; font-family: "IBM Plex Mono", monospace; font-size: 11px; }
 .sidebar-footer { display: grid; gap: 2px; margin-top: auto; padding-top: 28px; border-top: 1px solid rgba(255,255,255,.12); }
-.qr-footer-block { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.12); display: flex; justify-content: center; }
-.qr-footer-block a { display: flex; flex-direction: column; align-items: center; gap: 7px; text-decoration: none; }
-.qr-footer-block canvas { border-radius: 8px; background: #fff; padding: 6px; }
-.qr-footer-block span { font-size: 11px; color: #9db8a4; text-align: center; max-width: 130px; }
-.qr-footer-block a:hover span { color: var(--lime); }
+.qr-modal-image { display: block; width: 100%; max-width: 420px; margin: 16px auto; border-radius: 14px; }
 .student-name-field { display: grid; gap: 5px; margin-top: 14px; padding: 0 10px; }
 .student-name-field-top { margin: 0 0 12px; padding: 0 4px; }
 .upload-field { margin: 0 0 20px; padding: 0 4px 18px; border-bottom: 1px solid rgba(255,255,255,.12); display: grid; gap: 8px; }

@@ -243,6 +243,12 @@ function showUploadHistoryModal() {
   showModal(`<h2>ประวัติการส่งไฟล์การบ้าน</h2><ul class="upload-history-modal-list">${rows}</ul>`);
 }
 
+function showQrModal() {
+  const canvas = document.createElement("canvas");
+  new QRious({ element: canvas, value: MASCOT_REFRESH_URL, size: 480, background: "#ffffff", foreground: "#123023", level: "M" });
+  showModal(`<h2>สแกนเพื่อรีเฟรชโปรแกรม</h2><p class="lede">เปิดกล้องมือถือหรือแอป LINE แล้วสแกน QR นี้จากหน้าจอ</p><img class="qr-modal-image" src="${canvas.toDataURL()}" alt="QR code สำหรับ ${esc(MASCOT_REFRESH_URL)}" /><p class="lede" style="text-align:center;word-break:break-all">${esc(MASCOT_REFRESH_URL)}</p>`);
+}
+
 async function uploadHomeworkFile(file) {
   const name = studentName();
   if (!name) {
@@ -785,6 +791,7 @@ document.addEventListener("click", event => {
   if (target.dataset.action === "retake-followup") { localStorage.removeItem("pq-followup"); render(); return; }
   if (target.dataset.action === "retake-selfcheck") { localStorage.removeItem(target.dataset.key); render(); return; }
   if (target.dataset.action === "download-handbook-pdf") { downloadHandbookPdf(); return; }
+  if (target.dataset.action === "show-qr") { showQrModal(); return; }
   if (!target.dataset.view) return;
   event.preventDefault();
   if (target.dataset.view === "slide-start") { setViewHash("slides/1"); return; }
@@ -971,9 +978,6 @@ document.querySelector("#upload-input").addEventListener("change", (event) => {
 });
 document.querySelector("#upload-history-btn").addEventListener("click", showUploadHistoryModal);
 renderUploadHistory();
-if (window.QRious) {
-  new QRious({ element: document.querySelector("#qr-canvas"), value: MASCOT_REFRESH_URL, size: 120, background: "#ffffff", foreground: "#123023", level: "M" });
-}
 document.addEventListener("mousemove", event => {
   if (event.clientX <= 6 && !sidebarEl.classList.contains("open") && !sidebarEl.classList.contains("pinned")) setSidebarOpen(true);
 });
