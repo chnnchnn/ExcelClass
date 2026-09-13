@@ -92,6 +92,14 @@ const reveal = (openLabel, closeLabel, innerHtml) => `<button type="button" clas
 const zipLink = (folder, label) => `<a class="zip-link" href="data-files/${encodeURIComponent(folder)}.zip" download>⬇ ${esc(label || `ดาวน์โหลดไฟล์ข้อมูล ${folder}`)}</a>`;
 const MASCOT_REFRESH_URL = "https://liff.line.me/2011577141-9ukdVg3q";
 
+// Host venue credit shown on the home page — update this for each new class/venue.
+const hostVenue = {
+  label: "Class of Limagrain 2026",
+  logo: "assets/limagrain-logo.png",
+  logoAlt: "โลโก้ Limagrain",
+};
+const venueBadgeHtml = () => `<div class="venue-badge"><img src="${esc(hostVenue.logo)}" alt="${esc(hostVenue.logoAlt)}" /><span>${esc(hostVenue.label)}</span></div>`;
+
 // Google Apps Script grade-book backend — see backend/README.md to deploy your own
 // and paste the resulting Web App URL here. Left blank, the site works exactly as
 // before and only saves scores to the visitor's own browser.
@@ -145,7 +153,7 @@ function renderHome() {
     ["assessment", null, "✓", "แบบทดสอบและความมั่นใจ", "ทำก่อน–หลังเรียนเพื่อดูว่าความเข้าใจเปลี่ยนไปแค่ไหน"],
     ["datafiles", null, "⇩", "ไฟล์ฝึกปฏิบัติ", "ดาวน์โหลดชุดข้อมูลตัวอย่างของทุกบทเรียนไปฝึกกับ Excel จริง"],
   ];
-  return `<section class="hero" id="start"><div><div class="eyebrow">ห้องเรียนออนไลน์ 8 ชั่วโมง · กรณีศึกษา ไทยเฟรช เทรดดิ้ง</div><h1>ห้องเรียนที่ทำให้<br>งานซ้ำ ๆ จบด้วย Refresh</h1><p class="lede">ครบทั้งคู่มือ สไลด์บรรยาย แบบฝึกหัด Workshop สุดท้าย และแบบทดสอบ ใช้ระหว่างเรียนและกลับมาเปิดเมื่อเจองานจริง เป้าหมายไม่ใช่จำทุกเมนู แต่คือสร้างขั้นตอนที่เชื่อถือได้และทำงานซ้ำแทนคุณ.</p><div class="hero-meta"><span class="tag">7 บทเรียน</span><span class="tag">87 สไลด์</span><span class="tag">แบบฝึกหัด 7 ชุด</span><span class="tag">Workshop สุดท้าย</span><span class="tag">แบบทดสอบก่อน–หลัง</span></div><div class="progress-wrap"><div class="progress-label"><span>ความคืบหน้าบทเรียนคู่มือ</span><span>${done} / ${chapters.length} บท</span></div><div class="progress"><i style="width:${done / chapters.length * 100}%"></i></div></div></div><a class="hero-mascot-link" href="${MASCOT_REFRESH_URL}" title="คลิกมาสคอตเพื่อรีเฟรชโปรแกรม"><img class="hero-mascot" src="assets/mascot.jpg" alt="Power Bot มาสคอตประจำห้องเรียน Excel Power Query — คลิกเพื่อรีเฟรชโปรแกรม" /></a></section>
+  return `<section class="hero" id="start"><div>${venueBadgeHtml()}<div class="eyebrow">ห้องเรียนออนไลน์ 8 ชั่วโมง · กรณีศึกษา ไทยเฟรช เทรดดิ้ง</div><h1>ห้องเรียนที่ทำให้<br>งานซ้ำ ๆ จบด้วย Refresh</h1><p class="lede">ครบทั้งคู่มือ สไลด์บรรยาย แบบฝึกหัด Workshop สุดท้าย และแบบทดสอบ ใช้ระหว่างเรียนและกลับมาเปิดเมื่อเจองานจริง เป้าหมายไม่ใช่จำทุกเมนู แต่คือสร้างขั้นตอนที่เชื่อถือได้และทำงานซ้ำแทนคุณ.</p><div class="hero-meta"><span class="tag">7 บทเรียน</span><span class="tag">87 สไลด์</span><span class="tag">แบบฝึกหัด 7 ชุด</span><span class="tag">Workshop สุดท้าย</span><span class="tag">แบบทดสอบก่อน–หลัง</span></div><div class="progress-wrap"><div class="progress-label"><span>ความคืบหน้าบทเรียนคู่มือ</span><span>${done} / ${chapters.length} บท</span></div><div class="progress"><i style="width:${done / chapters.length * 100}%"></i></div></div></div><a class="hero-mascot-link" href="${MASCOT_REFRESH_URL}" title="คลิกมาสคอตเพื่อรีเฟรชโปรแกรม"><img class="hero-mascot" src="assets/mascot.jpg" alt="Power Bot มาสคอตประจำห้องเรียน Excel Power Query — คลิกเพื่อรีเฟรชโปรแกรม" /></a></section>
   <section><div class="eyebrow">ห้องเรียนของคุณ</div><h2>ทุกอย่างที่ใช้ในคอร์สอยู่ในที่เดียว</h2>
   <div class="workspace-grid">${workspaceCards.map(([view, id, icon, title, desc]) => `<button class="workspace-card" data-view="${view}" ${id ? `data-id="${id}"` : ""}><span class="workspace-icon">${icon}</span><strong>${esc(title)}</strong><small>${esc(desc)}</small></button>`).join("")}</div></section>
   <section class="home-grid"><div><div class="eyebrow">เริ่มจากบทเรียน</div><h2>เรียนทีละบท แล้วลองกับงานของตัวเอง</h2><div class="chapter-list">${chapters.map(c => `<button class="chapter-row" data-view="chapter" data-id="${c.id}"><span class="number">${c.number}</span><span><strong>${esc(c.title)}</strong><small>${esc(c.intro)}</small></span><span class="row-arrow">→</span></button>`).join("")}</div></div><div><div class="eyebrow">จำไว้ก่อนเริ่ม</div><h2>หกภาพในหัวที่ถูกต้อง</h2>${principles.map(p => `<article class="principle"><strong>${esc(p[0])}</strong><p>${esc(p[1])}</p></article>`).join("")}</div></section>`;

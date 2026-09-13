@@ -72,6 +72,9 @@ h3 { font-size: 19px; margin: 28px 0 8px; }
 p { margin: 0 0 14px; }
 .lede { color: var(--muted); max-width: 680px; font-size: 18px; }
 .hero { border-bottom: 1px solid var(--line); padding-bottom: 54px; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 36px; align-items: center; }
+.venue-badge { display: inline-flex; align-items: center; gap: 9px; padding: 6px 14px 6px 6px; margin-bottom: 16px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 4px 14px #0001; }
+.venue-badge img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; flex: none; }
+.venue-badge span { font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: .01em; }
 .hero-mascot-link { display: block; border-radius: 20px; transition: transform .2s ease; }
 .hero-mascot-link:hover { transform: scale(1.015); }
 .hero-mascot { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 20px; box-shadow: 0 18px 40px #0004; }
