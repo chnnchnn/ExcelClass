@@ -27,6 +27,11 @@ const HEADERS = {
 // in sync with MAX_UPLOAD_BYTES in app.js.
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
+// Fixed Google Drive folder that receives all homework uploads (one subfolder
+// per student name inside it). Must be owned by, or shared as Editor with,
+// the account that owns/deploys this script (it runs as "Execute as: Me").
+const SUBMISSIONS_FOLDER_ID = "18oMdTkibeRqSQ9L5BJk6PT8roQtxWuVP";
+
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
@@ -59,32 +64,22 @@ function handleFileUpload_(body) {
     return jsonResponse({ ok: false, error: "file too large (max " + (MAX_UPLOAD_BYTES / 1024 / 1024) + "MB)" });
   }
 
-  const stamp = Utilities.formatDate(new Date(), "GMT+7", "yyyy-MM-dd_HHmmss");
-  const blob = Utilities.newBlob(bytes, mimeType, stamp + "_" + fileName);
-
-  const rootFolder = getOrCreateSubmissionsFolder_();
+  const rootFolder = DriveApp.getFolderById(SUBMISSIONS_FOLDER_ID);
   const studentFolder = getOrCreateChildFolder_(rootFolder, name);
+
+  // replace any earlier submission with the same filename instead of piling up duplicates
+  const existingFiles = studentFolder.getFilesByName(fileName);
+  while (existingFiles.hasNext()) {
+    existingFiles.next().setTrashed(true);
+  }
+
+  const blob = Utilities.newBlob(bytes, mimeType, fileName);
   const file = studentFolder.createFile(blob);
 
   const sheet = getOrCreateSheet_("FileUploads", HEADERS.file);
   sheet.appendRow([new Date(), name, fileName, Math.round(bytes.length / 1024) + " KB", file.getUrl()]);
 
   return jsonResponse({ ok: true, url: file.getUrl() });
-}
-
-function getOrCreateSubmissionsFolder_() {
-  const props = PropertiesService.getScriptProperties();
-  const existingId = props.getProperty("SUBMISSIONS_FOLDER_ID");
-  if (existingId) {
-    try {
-      return DriveApp.getFolderById(existingId);
-    } catch (err) {
-      // fall through and provision a new one if the saved id no longer resolves
-    }
-  }
-  const folder = DriveApp.createFolder("Excel Power Query — การบ้านที่ส่ง (Student Submissions)");
-  props.setProperty("SUBMISSIONS_FOLDER_ID", folder.getId());
-  return folder;
 }
 
 function getOrCreateChildFolder_(parent, name) {
@@ -103,7 +98,8 @@ function getOrCreateChildFolder_(parent, name) {
  * with the new permission. Skip if uploads already work.
  */
 function oneTimeAuthorizeDriveAccess() {
-  DriveApp.getRootFolder();
+  const folder = DriveApp.getFolderById(SUBMISSIONS_FOLDER_ID);
+  Logger.log("Drive access OK. Folder name: " + folder.getName());
 }
 
 function doGet(e) {
