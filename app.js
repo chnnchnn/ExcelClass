@@ -100,6 +100,93 @@ const hostVenue = {
 };
 const venueBadgeHtml = () => `<div class="venue-badge"><img src="${esc(hostVenue.logo)}" alt="${esc(hostVenue.logoAlt)}" /><span>${esc(hostVenue.label)}</span></div>`;
 
+// ---- Handbook PDF export (jsPDF + html2canvas, loaded on demand) ----
+let pdfLibsPromise = null;
+function loadScriptOnce(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("โหลดไลบรารีไม่สำเร็จ: " + src));
+    document.head.appendChild(s);
+  });
+}
+function ensurePdfLibs() {
+  if (!pdfLibsPromise) {
+    pdfLibsPromise = Promise.all([
+      loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"),
+      loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"),
+    ]);
+  }
+  return pdfLibsPromise;
+}
+function loadImageAsDataUrl(src) {
+  return fetch(src).then(res => res.blob()).then(blob => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  }));
+}
+
+async function downloadHandbookPdf() {
+  toast("กำลังสร้างไฟล์ PDF คู่มือผู้เรียน...");
+  try {
+    await ensurePdfLibs();
+    const { jsPDF } = window.jspdf;
+
+    const root = document.createElement("div");
+    root.className = "pdf-export-root";
+    root.innerHTML = chapters.map(c => renderChapter(c.id)).join("");
+    root.querySelectorAll(".quiz-answer").forEach(el => el.classList.add("show"));
+    document.body.appendChild(root);
+
+    const [canvas, logoDataUrl] = await Promise.all([
+      html2canvas(root, { scale: 2, backgroundColor: "#ffffff", windowWidth: root.scrollWidth }),
+      loadImageAsDataUrl(hostVenue.logo),
+    ]);
+    document.body.removeChild(root);
+
+    const pdf = new jsPDF({ unit: "pt", format: "a4" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 28;
+    const headerHeight = 46;
+    const contentWidth = pageWidth - margin * 2;
+    const contentHeightPt = pageHeight - headerHeight - margin - 14;
+    const scale = contentWidth / canvas.width;
+    const pageSlicePx = Math.floor(contentHeightPt / scale);
+    const totalPages = Math.max(1, Math.ceil(canvas.height / pageSlicePx));
+
+    const drawHeader = () => {
+      pdf.setDrawColor(210, 210, 210);
+      pdf.line(margin, headerHeight - 8, pageWidth - margin, headerHeight - 8);
+      pdf.addImage(logoDataUrl, "PNG", margin, 12, 24, 24);
+      pdf.setFontSize(12);
+      pdf.setTextColor(30, 30, 30);
+      pdf.text(hostVenue.label, margin + 32, 28);
+    };
+
+    for (let i = 0; i < totalPages; i++) {
+      if (i > 0) pdf.addPage();
+      drawHeader();
+      const sliceHeightPx = Math.min(pageSlicePx, canvas.height - i * pageSlicePx);
+      const sliceCanvas = document.createElement("canvas");
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = sliceHeightPx;
+      sliceCanvas.getContext("2d").drawImage(canvas, 0, i * pageSlicePx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+      pdf.addImage(sliceCanvas.toDataURL("image/jpeg", 0.92), "JPEG", margin, headerHeight, contentWidth, sliceHeightPx * scale);
+    }
+
+    pdf.save("Excel-Power-Query-คู่มือผู้เรียน.pdf");
+    toast("ดาวน์โหลด PDF สำเร็จ");
+  } catch (err) {
+    console.error(err);
+    toast("สร้าง PDF ไม่สำเร็จ ลองใหม่อีกครั้ง");
+  }
+}
+
 // Google Apps Script grade-book backend — see backend/README.md to deploy your own
 // and paste the resulting Web App URL here. Left blank, the site works exactly as
 // before and only saves scores to the visitor's own browser.
@@ -156,13 +243,15 @@ function renderHome() {
   return `<section class="hero" id="start"><div>${venueBadgeHtml()}<div class="eyebrow">ห้องเรียนออนไลน์ 8 ชั่วโมง · กรณีศึกษา ไทยเฟรช เทรดดิ้ง</div><h1>ห้องเรียนที่ทำให้<br>งานซ้ำ ๆ จบด้วย Refresh</h1><p class="lede">ครบทั้งคู่มือ สไลด์บรรยาย แบบฝึกหัด Workshop สุดท้าย และแบบทดสอบ ใช้ระหว่างเรียนและกลับมาเปิดเมื่อเจองานจริง เป้าหมายไม่ใช่จำทุกเมนู แต่คือสร้างขั้นตอนที่เชื่อถือได้และทำงานซ้ำแทนคุณ.</p><div class="hero-meta"><span class="tag">7 บทเรียน</span><span class="tag">87 สไลด์</span><span class="tag">แบบฝึกหัด 7 ชุด</span><span class="tag">Workshop สุดท้าย</span><span class="tag">แบบทดสอบก่อน–หลัง</span></div><div class="progress-wrap"><div class="progress-label"><span>ความคืบหน้าบทเรียนคู่มือ</span><span>${done} / ${chapters.length} บท</span></div><div class="progress"><i style="width:${done / chapters.length * 100}%"></i></div></div></div><a class="hero-mascot-link" href="${MASCOT_REFRESH_URL}" title="คลิกมาสคอตเพื่อรีเฟรชโปรแกรม"><img class="hero-mascot" src="assets/mascot.jpg" alt="Power Bot มาสคอตประจำห้องเรียน Excel Power Query — คลิกเพื่อรีเฟรชโปรแกรม" /></a></section>
   <section><div class="eyebrow">ห้องเรียนของคุณ</div><h2>ทุกอย่างที่ใช้ในคอร์สอยู่ในที่เดียว</h2>
   <div class="workspace-grid">${workspaceCards.map(([view, id, icon, title, desc]) => `<button class="workspace-card" data-view="${view}" ${id ? `data-id="${id}"` : ""}><span class="workspace-icon">${icon}</span><strong>${esc(title)}</strong><small>${esc(desc)}</small></button>`).join("")}</div></section>
-  <section class="home-grid"><div><div class="eyebrow">เริ่มจากบทเรียน</div><h2>เรียนทีละบท แล้วลองกับงานของตัวเอง</h2><div class="chapter-list">${chapters.map(c => `<button class="chapter-row" data-view="chapter" data-id="${c.id}"><span class="number">${c.number}</span><span><strong>${esc(c.title)}</strong><small>${esc(c.intro)}</small></span><span class="row-arrow">→</span></button>`).join("")}</div></div><div><div class="eyebrow">จำไว้ก่อนเริ่ม</div><h2>หกภาพในหัวที่ถูกต้อง</h2>${principles.map(p => `<article class="principle"><strong>${esc(p[0])}</strong><p>${esc(p[1])}</p></article>`).join("")}</div></section>`;
+  <section class="home-grid"><div><div class="eyebrow">เริ่มจากบทเรียน</div><h2>เรียนทีละบท แล้วลองกับงานของตัวเอง</h2><p style="margin:-4px 0 16px">${pdfDownloadButtonHtml()}</p><div class="chapter-list">${chapters.map(c => `<button class="chapter-row" data-view="chapter" data-id="${c.id}"><span class="number">${c.number}</span><span><strong>${esc(c.title)}</strong><small>${esc(c.intro)}</small></span><span class="row-arrow">→</span></button>`).join("")}</div></div><div><div class="eyebrow">จำไว้ก่อนเริ่ม</div><h2>หกภาพในหัวที่ถูกต้อง</h2>${principles.map(p => `<article class="principle"><strong>${esc(p[0])}</strong><p>${esc(p[1])}</p></article>`).join("")}</div></section>`;
 }
+
+const pdfDownloadButtonHtml = () => `<button type="button" class="ghost-button pdf-download-btn" data-action="download-handbook-pdf">⬇ ดาวน์โหลด PDF คู่มือผู้เรียน (ทั้งเล่ม)</button>`;
 
 function renderChapter(id) {
   const c = chapters.find(item => item.id === id) || chapters[0];
   const isDone = completed().includes(c.id);
-  return `<section class="chapter-header"><div><div class="eyebrow">บทที่ ${c.number}</div><h1>${esc(c.title)}</h1><p class="lede">${esc(c.intro)}</p></div><div class="chapter-no">CHAPTER ${c.number}</div></section>
+  return `<section class="chapter-header"><div><div class="eyebrow">บทที่ ${c.number}</div><h1>${esc(c.title)}</h1><p class="lede">${esc(c.intro)}</p>${pdfDownloadButtonHtml()}</div><div class="chapter-no">CHAPTER ${c.number}</div></section>
   <section class="content-grid"><div><div class="learning"><h3>เมื่อจบบทนี้ คุณจะทำสิ่งเหล่านี้ได้</h3><ul>${c.outcomes.map(item => `<li>${esc(item)}</li>`).join("")}</ul></div><h3>${esc(c.conceptTitle)}</h3><p>${esc(c.concept)}</p><h3>ขั้นตอนที่ต้องทำให้คล่อง</h3><ol class="steps">${c.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>${table(c.table)}<div class="trap"><strong>กับดักของบทนี้</strong><br>${esc(c.trap)}</div><div class="checklist"><label class="check-item ${isDone ? "done" : ""}"><input class="chapter-check" data-id="${c.id}" type="checkbox" ${isDone ? "checked" : ""}><span>ฉันเรียนและลองทำบทนี้กับข้อมูลตัวอย่างแล้ว</span></label></div><div class="quiz"><div class="eyebrow">ทดสอบตัวเอง</div><h3>${esc(c.quiz)}</h3><button class="reveal-answer">แสดงแนวคำตอบ</button><div class="quiz-answer">${esc(c.answer)}</div></div></div><aside class="side-note"><strong>ก่อน Refresh ทุกครั้ง</strong>ตรวจว่า Query อยู่ที่ขั้นตอนสุดท้าย จำนวนแถวสมเหตุสมผล และไม่มี Error ที่ Column Quality.</aside></section>`;
 }
 
@@ -580,6 +669,7 @@ document.addEventListener("click", event => {
   if (target.dataset.action === "retake-confidence") { localStorage.removeItem(`pq-confidence-${target.dataset.mode}`); render(); return; }
   if (target.dataset.action === "retake-followup") { localStorage.removeItem("pq-followup"); render(); return; }
   if (target.dataset.action === "retake-selfcheck") { localStorage.removeItem(target.dataset.key); render(); return; }
+  if (target.dataset.action === "download-handbook-pdf") { downloadHandbookPdf(); return; }
   if (!target.dataset.view) return;
   event.preventDefault();
   if (target.dataset.view === "slide-start") { setViewHash("slides/1"); return; }

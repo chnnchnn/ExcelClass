@@ -278,3 +278,36 @@ p { margin: 0 0 14px; }
 .modal-score { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; background: var(--sky); font-size: 20px; font-weight: 700; margin: 8px 0 18px; }
 .modal-score.pass { background: color-mix(in srgb, var(--green) 16%, var(--surface)); color: var(--green-dark); }
 .field.required label::after { content: " *"; color: var(--red); }
+
+/* Handbook PDF export */
+.pdf-download-btn { display: inline-flex; align-items: center; gap: 7px; }
+.pdf-export-root { position: fixed; left: -99999px; top: 0; width: 780px; background: #fff; color: #161616; font-family: "IBM Plex Sans Thai", system-ui, sans-serif; }
+.pdf-export-root, .pdf-export-root * { line-height: 1.22 !important; }
+.pdf-export-root .chapter-header { display: block; margin: 0 0 8px; padding: 0 0 8px; border-bottom: 1px solid #ccc; page-break-before: always; }
+.pdf-export-root .chapter-header:first-child { page-break-before: avoid; }
+.pdf-export-root .chapter-no { display: none; }
+.pdf-export-root .eyebrow { font-size: 10px; }
+.pdf-export-root h1 { font-size: 19px; margin: 4px 0 6px; }
+.pdf-export-root h2 { font-size: 15px; margin: 10px 0 4px; }
+.pdf-export-root h3 { font-size: 13px; margin: 8px 0 3px; }
+.pdf-export-root p, .pdf-export-root li { font-size: 11px; }
+.pdf-export-root .lede { font-size: 12px; }
+.pdf-export-root .content-grid { display: block; }
+.pdf-export-root .side-note { display: none; }
+.pdf-export-root .learning { padding: 8px 10px; margin-bottom: 6px; }
+.pdf-export-root .learning li { margin: 1px 0; }
+.pdf-export-root .steps { margin: 6px 0 10px; }
+.pdf-export-root .steps li { padding: 0 0 6px 34px; }
+.pdf-export-root .steps li::before { width: 20px; height: 20px; font-size: 10px; }
+.pdf-export-root .data-table { margin: 8px 0 10px; font-size: 10px; }
+.pdf-export-root .data-table th, .pdf-export-root .data-table td { padding: 4px 6px; }
+.pdf-export-root .trap { margin: 8px 0; padding: 8px 10px; }
+.pdf-export-root .checklist { display: none; }
+.pdf-export-root .quiz { margin-top: 10px; padding-top: 4px; }
+.pdf-export-root .reveal-answer { display: none; }
+.pdf-export-root .quiz-answer { display: block !important; margin-top: 4px; padding: 8px 10px; font-size: 11px; }
+.pdf-export-root .pdf-download-btn { display: none; }
+/* html2canvas can't parse color-mix(); pin these to plain equivalents for the export copy */
+.pdf-export-root .data-table th { background: #e3f1e9; }
+.pdf-export-root .trap { border-color: #e8a99c; background: #fdf1ee; }
+.pdf-export-root .side-note { background: #eef7d9; }
