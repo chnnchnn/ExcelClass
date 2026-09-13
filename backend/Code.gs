@@ -89,17 +89,32 @@ function getOrCreateChildFolder_(parent, name) {
 }
 
 /**
- * ONE-TIME SETUP after adding file-upload support: this script now calls
- * DriveApp, a permission it never needed before, so the account running it
- * must grant Drive access. In the Apps Script editor, pick this function
- * ("oneTimeAuthorizeDriveAccess") from the function dropdown and click Run —
- * a permissions screen will appear; click Allow. Do this once, then re-deploy
- * (Deploy → Manage deployments → Edit → Deploy) so the live web app runs
- * with the new permission. Skip if uploads already work.
+ * ONE-TIME SETUP after adding (or changing) file-upload support: this script
+ * calls DriveApp, a permission it never needed before, so the account running
+ * it must grant Drive access. In the Apps Script editor, pick this function
+ * ("oneTimeAuthorizeDriveAccess") from the function dropdown, click Run, and
+ * click Allow on the permissions screen (you may need to click "Advanced" →
+ * "Go to [project] (unsafe)" first — that's expected for a personal,
+ * unverified script). Then re-deploy: Deploy → Manage deployments → Edit →
+ * Deploy, so the live web app picks up the permission.
+ *
+ * Important: this function deliberately tests both READ (getFolderById) and
+ * WRITE (createFolder) access, not just read. Google can grant a narrower
+ * read-only Drive scope from a consent screen if the only thing it saw you
+ * authorize was a read call — that scope doesn't cover creating folders/files,
+ * and the failure only shows up later when doPost actually tries to write,
+ * with an error that looks identical to "not authorized at all". If uploads
+ * ever start failing again with a DriveApp authorization error, re-run this
+ * function — if only "Drive READ ok" logs and it then throws on the
+ * createFolder line, that confirms it's this same read-vs-write gap.
  */
 function oneTimeAuthorizeDriveAccess() {
   const folder = DriveApp.getFolderById(SUBMISSIONS_FOLDER_ID);
-  Logger.log("Drive access OK. Folder name: " + folder.getName());
+  Logger.log("Drive READ ok. Folder name: " + folder.getName());
+  const testFolder = folder.createFolder("_authorization_test_" + new Date().getTime());
+  Logger.log("Drive WRITE ok. Created: " + testFolder.getName());
+  testFolder.setTrashed(true);
+  Logger.log("Cleaned up test folder. All good.");
 }
 
 function doGet(e) {
