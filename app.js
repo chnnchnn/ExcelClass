@@ -230,10 +230,17 @@ function recordUploadedFile(fileName, url) {
 }
 
 function renderUploadHistory() {
-  const el = document.querySelector("#upload-history");
-  if (!el) return;
+  const btn = document.querySelector("#upload-history-btn");
+  if (!btn) return;
   const list = stored("pq-uploaded-files", []);
-  el.innerHTML = list.map(f => `<li>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.fileName)}</a>` : `<span>${esc(f.fileName)}</span>`}<small>${esc(new Date(f.uploadedAt).toLocaleDateString("th-TH"))}</small></li>`).join("");
+  btn.textContent = `📄 ประวัติการส่งไฟล์ (${list.length})`;
+  btn.disabled = list.length === 0;
+}
+
+function showUploadHistoryModal() {
+  const list = stored("pq-uploaded-files", []);
+  const rows = list.map(f => `<li>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.fileName)}</a>` : `<span>${esc(f.fileName)}</span>`}<small>${esc(new Date(f.uploadedAt).toLocaleString("th-TH"))}</small></li>`).join("");
+  showModal(`<h2>ประวัติการส่งไฟล์การบ้าน</h2><ul class="upload-history-modal-list">${rows}</ul>`);
 }
 
 async function uploadHomeworkFile(file) {
@@ -939,6 +946,7 @@ document.querySelector("#upload-input").addEventListener("change", (event) => {
   if (file) uploadHomeworkFile(file);
   event.target.value = "";
 });
+document.querySelector("#upload-history-btn").addEventListener("click", showUploadHistoryModal);
 renderUploadHistory();
 document.addEventListener("mousemove", event => {
   if (event.clientX <= 6 && !sidebarEl.classList.contains("open") && !sidebarEl.classList.contains("pinned")) setSidebarOpen(true);

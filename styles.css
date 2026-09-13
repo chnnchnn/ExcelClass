@@ -60,11 +60,14 @@ body.sidebar-pinned main { margin-left: 272px; }
 .upload-trigger-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 9px 10px; border: 1px solid rgba(255,255,255,.18); border-radius: 6px; background: rgba(255,255,255,.06); color: #eaf5e9; font-size: 13px; font-weight: 600; }
 .upload-trigger-btn:hover { border-color: var(--lime); color: var(--lime); }
 .upload-trigger-btn:disabled { opacity: .5; cursor: not-allowed; }
-.upload-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.upload-history li { font-size: 11px; color: #c3d4c6; display: flex; justify-content: space-between; gap: 8px; }
-.upload-history li a { color: #9cddb0; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.upload-history li a:hover { text-decoration: underline; }
-.upload-history small { color: #7f9686; white-space: nowrap; flex: none; }
+.upload-history-btn { border: 0; background: none; color: #9cddb0; font-size: 11px; text-align: left; padding: 2px 2px; text-decoration: underline; text-underline-offset: 2px; }
+.upload-history-btn:hover { color: var(--lime); }
+.upload-history-btn:disabled { color: #7f9686; text-decoration: none; cursor: default; }
+.upload-history-modal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.upload-history-modal-list li { font-size: 14px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--sky); }
+.upload-history-modal-list li a { color: var(--green); font-weight: 600; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upload-history-modal-list li a:hover { text-decoration: underline; }
+.upload-history-modal-list small { color: var(--muted); white-space: nowrap; flex: none; }
 .student-name-field span { font-size: 11px; color: #9db8a4; }
 .student-name-field input { padding: 8px 9px; border: 1px solid rgba(255,255,255,.18); border-radius: 6px; background: rgba(255,255,255,.06); color: #eaf5e9; font-size: 13px; }
 .student-name-field input::placeholder { color: #7f9686; }
