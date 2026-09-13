@@ -58,6 +58,16 @@
         <div id="modal-content"></div>
       </div>
     </div>
+    <div class="name-gate-overlay" id="name-gate-overlay">
+      <form class="name-gate-box" id="name-gate-form" role="dialog" aria-modal="true">
+        <img class="name-gate-mascot" src="assets/mascot-avatar.jpg" alt="" />
+        <h2>ก่อนเริ่มใช้งาน กรุณาบอกชื่อของคุณ</h2>
+        <p class="lede">กรอกชื่อและนามสกุลจริงของคุณ เพื่อใช้บันทึกคะแนนและไฟล์การบ้านที่คุณส่งเข้าระบบ</p>
+        <input id="name-gate-input" type="text" placeholder="ชื่อ นามสกุล เช่น สมชาย ใจดี" autocomplete="name" required />
+        <p class="name-gate-error" id="name-gate-error" hidden>กรุณากรอกทั้งชื่อและนามสกุล (อย่างน้อย 2 คำ)</p>
+        <button type="submit" class="primary-button">เริ่มใช้งาน</button>
+      </form>
+    </div>
     <script src="agenda-data.js"></script>
     <script src="slides-data.js"></script>
     <script src="exercises-data.js"></script>

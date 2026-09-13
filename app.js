@@ -197,6 +197,10 @@ function studentName() {
   return (localStorage.getItem("pq-student-name") || "").trim();
 }
 
+function isValidFullName(name) {
+  return name.trim().split(/\s+/).filter(Boolean).length >= 2;
+}
+
 function syncToBackend(type, payload) {
   if (!GAS_ENDPOINT) return;
   fetch(GAS_ENDPOINT, {
@@ -906,6 +910,28 @@ studentNameInput.value = studentName();
 studentNameInput.addEventListener("change", () => {
   localStorage.setItem("pq-student-name", studentNameInput.value.trim());
   toast("บันทึกชื่อแล้ว");
+});
+
+const nameGateOverlay = document.querySelector("#name-gate-overlay");
+const nameGateInput = document.querySelector("#name-gate-input");
+const nameGateError = document.querySelector("#name-gate-error");
+if (!isValidFullName(studentName())) {
+  nameGateInput.value = studentName();
+  nameGateOverlay.classList.add("show");
+}
+document.querySelector("#name-gate-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = nameGateInput.value.trim();
+  if (!isValidFullName(name)) {
+    nameGateError.hidden = false;
+    nameGateInput.focus();
+    return;
+  }
+  nameGateError.hidden = true;
+  localStorage.setItem("pq-student-name", name);
+  studentNameInput.value = name;
+  nameGateOverlay.classList.remove("show");
+  toast(`ยินดีต้อนรับ คุณ${name}`);
 });
 document.querySelector("#upload-trigger").addEventListener("click", () => document.querySelector("#upload-input").click());
 document.querySelector("#upload-input").addEventListener("change", (event) => {

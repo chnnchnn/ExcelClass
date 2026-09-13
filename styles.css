@@ -288,6 +288,17 @@ p { margin: 0 0 14px; }
 .modal-score.pass { background: color-mix(in srgb, var(--green) 16%, var(--surface)); color: var(--green-dark); }
 .field.required label::after { content: " *"; color: var(--red); }
 
+/* Mandatory name gate — blocks the whole app until a first+last name is entered */
+.name-gate-overlay { display: none; position: fixed; inset: 0; z-index: 40; background: rgba(10, 16, 12, .82); align-items: center; justify-content: center; padding: 24px; }
+.name-gate-overlay.show { display: flex; }
+.name-gate-box { width: min(420px, 100%); background: var(--surface); color: var(--ink); border-radius: 16px; padding: 36px 30px; text-align: center; box-shadow: 0 24px 60px #0006; }
+.name-gate-mascot { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; margin-bottom: 14px; }
+.name-gate-box h2 { font-size: 20px; margin: 0 0 8px; }
+.name-gate-box .lede { font-size: 14px; margin: 0 0 20px; }
+.name-gate-box input { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); color: var(--ink); font-size: 15px; text-align: center; }
+.name-gate-box .primary-button { width: 100%; margin-top: 14px; padding: 11px; font-size: 15px; }
+.name-gate-error { color: var(--red); font-size: 13px; margin: 8px 0 0; }
+
 /* Handbook PDF export */
 .pdf-download-btn { display: inline-flex; align-items: center; gap: 7px; }
 .pdf-export-root { position: fixed; left: -99999px; top: 0; width: 780px; background: #fff; color: #161616; font-family: "IBM Plex Sans Thai", system-ui, sans-serif; }
