@@ -12,10 +12,13 @@
   </head>
   <body>
     <aside class="sidebar" id="sidebar">
-      <a class="brand" href="#start" aria-label="กลับไปหน้าเริ่มต้น">
-        <span class="brand-mark">PQ</span>
-        <span>Excel Power Query<small>ห้องเรียนออนไลน์</small></span>
-      </a>
+      <div class="sidebar-header">
+        <a class="brand" href="#start" aria-label="กลับไปหน้าเริ่มต้น">
+          <img class="brand-mark" src="assets/mascot-avatar.jpg" alt="" />
+          <span>Excel Power Query<small>ห้องเรียนออนไลน์</small></span>
+        </a>
+        <button id="pin-button" class="pin-button" type="button" aria-pressed="false" title="ปักหมุดเมนูให้เปิดค้างไว้">📌</button>
+      </div>
       <nav id="chapter-nav" aria-label="บทเรียน"></nav>
       <div class="sidebar-footer">
         <a href="#plan" data-view="plan">แผน 30 วัน</a>
@@ -23,6 +26,7 @@
         <a href="#troubleshoot" data-view="troubleshoot">แก้ปัญหา</a>
       </div>
     </aside>
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
     <main>
       <header class="topbar">
@@ -33,6 +37,7 @@
       <div id="app" class="app"></div>
     </main>
     <template id="toast-template"><div class="toast" role="status"></div></template>
+    <script src="agenda-data.js"></script>
     <script src="slides-data.js"></script>
     <script src="exercises-data.js"></script>
     <script src="assessment-data.js"></script>

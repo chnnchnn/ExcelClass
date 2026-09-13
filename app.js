@@ -117,7 +117,7 @@ function renderHome() {
     ["assessment", null, "✓", "แบบทดสอบและความมั่นใจ", "ทำก่อน–หลังเรียนเพื่อดูว่าความเข้าใจเปลี่ยนไปแค่ไหน"],
     ["datafiles", null, "⇩", "ไฟล์ฝึกปฏิบัติ", "ดาวน์โหลดชุดข้อมูลตัวอย่างของทุกบทเรียนไปฝึกกับ Excel จริง"],
   ];
-  return `<section class="hero" id="start"><div class="eyebrow">ห้องเรียนออนไลน์ 8 ชั่วโมง · กรณีศึกษา ไทยเฟรช เทรดดิ้ง</div><h1>ห้องเรียนที่ทำให้<br>งานซ้ำ ๆ จบด้วย Refresh</h1><p class="lede">ครบทั้งคู่มือ สไลด์บรรยาย แบบฝึกหัด Workshop สุดท้าย และแบบทดสอบ ใช้ระหว่างเรียนและกลับมาเปิดเมื่อเจองานจริง เป้าหมายไม่ใช่จำทุกเมนู แต่คือสร้างขั้นตอนที่เชื่อถือได้และทำงานซ้ำแทนคุณ.</p><div class="hero-meta"><span class="tag">7 บทเรียน</span><span class="tag">87 สไลด์</span><span class="tag">แบบฝึกหัด 7 ชุด</span><span class="tag">Workshop สุดท้าย</span><span class="tag">แบบทดสอบก่อน–หลัง</span></div><div class="progress-wrap"><div class="progress-label"><span>ความคืบหน้าบทเรียนคู่มือ</span><span>${done} / ${chapters.length} บท</span></div><div class="progress"><i style="width:${done / chapters.length * 100}%"></i></div></div></section>
+  return `<section class="hero" id="start"><div><div class="eyebrow">ห้องเรียนออนไลน์ 8 ชั่วโมง · กรณีศึกษา ไทยเฟรช เทรดดิ้ง</div><h1>ห้องเรียนที่ทำให้<br>งานซ้ำ ๆ จบด้วย Refresh</h1><p class="lede">ครบทั้งคู่มือ สไลด์บรรยาย แบบฝึกหัด Workshop สุดท้าย และแบบทดสอบ ใช้ระหว่างเรียนและกลับมาเปิดเมื่อเจองานจริง เป้าหมายไม่ใช่จำทุกเมนู แต่คือสร้างขั้นตอนที่เชื่อถือได้และทำงานซ้ำแทนคุณ.</p><div class="hero-meta"><span class="tag">7 บทเรียน</span><span class="tag">87 สไลด์</span><span class="tag">แบบฝึกหัด 7 ชุด</span><span class="tag">Workshop สุดท้าย</span><span class="tag">แบบทดสอบก่อน–หลัง</span></div><div class="progress-wrap"><div class="progress-label"><span>ความคืบหน้าบทเรียนคู่มือ</span><span>${done} / ${chapters.length} บท</span></div><div class="progress"><i style="width:${done / chapters.length * 100}%"></i></div></div></div><img class="hero-mascot" src="assets/mascot.jpg" alt="Power Bot มาสคอตประจำห้องเรียน Excel Power Query" /></section>
   <section><div class="eyebrow">ห้องเรียนของคุณ</div><h2>ทุกอย่างที่ใช้ในคอร์สอยู่ในที่เดียว</h2>
   <div class="workspace-grid">${workspaceCards.map(([view, id, icon, title, desc]) => `<button class="workspace-card" data-view="${view}" ${id ? `data-id="${id}"` : ""}><span class="workspace-icon">${icon}</span><strong>${esc(title)}</strong><small>${esc(desc)}</small></button>`).join("")}</div></section>
   <section class="home-grid"><div><div class="eyebrow">เริ่มจากบทเรียน</div><h2>เรียนทีละบท แล้วลองกับงานของตัวเอง</h2><div class="chapter-list">${chapters.map(c => `<button class="chapter-row" data-view="chapter" data-id="${c.id}"><span class="number">${c.number}</span><span><strong>${esc(c.title)}</strong><small>${esc(c.intro)}</small></span><span class="row-arrow">→</span></button>`).join("")}</div></div><div><div class="eyebrow">จำไว้ก่อนเริ่ม</div><h2>หกภาพในหัวที่ถูกต้อง</h2>${principles.map(p => `<article class="principle"><strong>${esc(p[0])}</strong><p>${esc(p[1])}</p></article>`).join("")}</div></section>`;
@@ -150,32 +150,74 @@ function renderTroubleshoot() {
   return `<section><div class="eyebrow">คู่มือแก้ปัญหา</div><h1>เปิดหน้านี้ทุกครั้งที่ติด</h1><p class="lede">ก่อนแก้ ให้แยกก่อนว่าเป็น Error ระดับขั้นตอน หรือ Error ในบางเซลล์ แล้วดูจำนวนแถวว่ามากหรือน้อยกว่าที่ควร.</p><h2>อ่านข้อความ Error ให้เป็น</h2>${table([["ส่วนของข้อความ", "อ่านหาอะไร"], ["เหตุผล", "ก่อนเครื่องหมายทวิภาค เช่น Expression.Error"], ["ข้อความ", "คำอธิบายว่าอะไรผิด เช่น ไม่พบคอลัมน์"], ["Details", "ชื่อคอลัมน์ ค่า หรือ object ที่เป็นต้นเหตุ"]])}<h2>ตรวจตามจำนวนแถว</h2>${table([["อาการ", "สาเหตุที่พบบ่อย"], ["แถวมากกว่าที่ควร", "ลบซ้ำก่อน Trim, key ในตารางอ้างอิงซ้ำ, Split into Rows โดยไม่ตั้งใจ"], ["แถวน้อยกว่าที่ควร", "ใช้ Inner Join, วันที่แปลงไม่ได้แล้วถูกกรอง, มี Filter ค้าง"], ["แถวตรงแต่ยอดไม่ตรง", "สูตรผิด, คอลัมน์ยังเป็นข้อความ, ลำดับเงื่อนไขผิด"]])}<h2>สามทางเลือกเมื่อ Error อยู่ในเซลล์</h2><ol class="steps"><li>แก้ข้อมูลต้นทาง เมื่อ Error คือข้อมูลผิดจริง</li><li>แทนค่าหรือทำความสะอาด เมื่อมีรูปแบบที่คาดเดาได้</li><li>เก็บ Error ไว้เป็น Query แยก เมื่อ Error เป็นสัญญาณให้ธุรกิจตรวจสอบ</li></ol></section>`;
 }
 
-function slideGroups() {
-  const sessions = [];
-  slidesData.forEach(s => {
-    let sessionGroup = sessions.find(g => g.session === s.session);
-    if (!sessionGroup) { sessionGroup = { session: s.session, hours: [] }; sessions.push(sessionGroup); }
-    let hourGroup = sessionGroup.hours.find(h => h.hour === s.hour);
-    if (!hourGroup) { hourGroup = { hour: s.hour, slides: [] }; sessionGroup.hours.push(hourGroup); }
-    hourGroup.slides.push(s);
-  });
-  return sessions;
+function hourNumOf(slide) {
+  const m = /^ชั่วโมงที่\s*(\d+)/.exec(slide.hour || "");
+  return m ? parseInt(m[1], 10) : null;
 }
 
+function buildAgendaSections() {
+  const introSlides = slidesData.filter(s => s.session.startsWith("Course Intro"));
+  const appendixSlides = slidesData.filter(s => s.session.startsWith("ภาคผนวก"));
+  // session-divider slides carry no hour of their own — fold each into the hour it originally introduced
+  const dividerHourMap = { "Session 1 Divider": 1, "Session 2 Divider": 4, "Session 3 Divider": 7 };
+  const sections = [{ type: "intro", title: "ก่อนเริ่มเรียน", slides: introSlides }];
+  courseAgenda.forEach(sess => {
+    const rows = sess.items.map(item => {
+      if (item.break) return { type: "break", duration: item.duration };
+      const dividers = slidesData.filter(s => dividerHourMap[s.title] === item.hour);
+      const hourSlides = slidesData.filter(s => hourNumOf(s) === item.hour);
+      return { type: "hour", ...item, slides: [...dividers, ...hourSlides] };
+    });
+    sections.push({ type: "session", title: sess.session, subtitle: sess.sessionEn, rows });
+  });
+  sections.push({ type: "appendix", title: "ภาคผนวก และปิดคอร์ส", slides: appendixSlides });
+  return sections;
+}
+
+function agendaContextFor(slide) {
+  const hourNum = hourNumOf(slide);
+  if (hourNum != null) {
+    const sess = courseAgenda.find(s => s.items.some(it => it.hour === hourNum));
+    if (sess) return `${sess.session} · ${slide.hour}`;
+  }
+  return slide.hour ? `${slide.session} · ${slide.hour}` : slide.session;
+}
+
+const slideRow = (s) => `<button class="chapter-row" data-view="slides" data-id="${s.n}"><span class="number">${s.n}</span><span><strong>${esc(s.title)}</strong></span><span class="row-arrow">→</span></button>`;
+
 function renderSlideJump(currentN) {
-  const groups = slideGroups();
-  const options = groups.map(g => `<optgroup label="${esc(g.session)}">${g.hours.map(h => h.slides.map(s => `<option value="${s.n}" ${s.n === currentN ? "selected" : ""}>${s.n}. ${esc(s.title)}</option>`).join("")).join("")}</optgroup>`).join("");
-  return `<select id="slide-jump" class="slide-jump">${options}</select>`;
+  const sections = buildAgendaSections();
+  const optgroupFor = (title, slides) => slides.length ? `<optgroup label="${esc(title)}">${slides.map(s => `<option value="${s.n}" ${s.n === currentN ? "selected" : ""}>${s.n}. ${esc(s.title)}</option>`).join("")}</optgroup>` : "";
+  let html = optgroupFor(sections[0].title, sections[0].slides);
+  sections.filter(s => s.type === "session").forEach(sess => {
+    sess.rows.forEach(row => { if (row.type === "hour") html += optgroupFor(`${sess.title} · ชั่วโมงที่ ${row.hour}`, row.slides); });
+  });
+  const appendixSection = sections[sections.length - 1];
+  html += optgroupFor(appendixSection.title, appendixSection.slides);
+  return `<select id="slide-jump" class="slide-jump">${html}</select>`;
 }
 
 function renderSlides(id) {
   const n = parseInt(id, 10);
   const slide = slidesData.find(s => s.n === n);
   if (!slide) {
-    const groups = slideGroups();
-    return `<section><div class="eyebrow">ห้องเรียน</div><h1>สไลด์บรรยาย 87 แผ่น</h1><p class="lede">สไลด์ต้นฉบับที่ใช้บรรยายทั้ง 8 ชั่วโมง พร้อมสรุปโน้ตผู้สอนในแต่ละแผ่น เลือกหัวข้อที่ต้องการทบทวน หรือกด "เริ่มดูตั้งแต่ต้น" เพื่อไล่ดูทีละแผ่น</p>
+    const sections = buildAgendaSections();
+    const introHtml = `<h2 style="margin-top:36px">${esc(sections[0].title)}</h2><div class="chapter-list">${sections[0].slides.map(slideRow).join("")}</div>`;
+    const sessionsHtml = sections.filter(s => s.type === "session").map(sess => `
+      <h2 style="margin-top:36px">${esc(sess.title)}</h2>
+      <p class="lede" style="font-size:14px;margin-top:-6px">${esc(sess.subtitle)}</p>
+      ${sess.rows.map(row => row.type === "break"
+        ? `<div class="agenda-break">พัก ${esc(row.duration)}</div>`
+        : `<h3>${esc((row.slides.find(s => s.hour) || {}).hour || `ชั่วโมงที่ ${row.hour}`)}</h3>
+           <p class="agenda-hour-meta">${esc(row.objective)} · กิจกรรม: ${esc(row.activity)} · ${esc(row.duration)}</p>
+           <div class="chapter-list">${row.slides.map(slideRow).join("")}</div>`
+      ).join("")}
+    `).join("");
+    const appendixSection = sections[sections.length - 1];
+    const appendixHtml = `<h2 style="margin-top:36px">${esc(appendixSection.title)}</h2><div class="chapter-list">${appendixSection.slides.map(slideRow).join("")}</div>`;
+    return `<section><div class="eyebrow">ห้องเรียน</div><h1>สไลด์บรรยาย 87 แผ่น</h1><p class="lede">สไลด์ต้นฉบับที่ใช้บรรยายทั้ง 8 ชั่วโมง จัดเรียงตามกำหนดการสอนจริง พร้อมสรุปโน้ตผู้สอนในแต่ละแผ่น เลือกหัวข้อที่ต้องการทบทวน หรือกด "เริ่มดูตั้งแต่ต้น" เพื่อไล่ดูทีละแผ่น</p>
     <button class="primary-button" data-view="slide-start" style="margin-bottom:28px">▶ เริ่มดูตั้งแต่แผ่นที่ 1</button>
-    ${groups.map(g => `<h2 style="margin-top:36px">${esc(g.session)}</h2>${g.hours.map(h => `${h.hour ? `<h3>${esc(h.hour)}</h3>` : ""}<div class="chapter-list">${h.slides.map(s => `<button class="chapter-row" data-view="slides" data-id="${s.n}"><span class="number">${s.n}</span><span><strong>${esc(s.title)}</strong></span><span class="row-arrow">→</span></button>`).join("")}</div>`).join("")}`).join("")}
+    ${introHtml}${sessionsHtml}${appendixHtml}
     </section>`;
   }
   const idx = slidesData.findIndex(s => s.n === n);
@@ -187,7 +229,7 @@ function renderSlides(id) {
       <span class="slide-counter">สไลด์ ${slide.n} / ${slidesData.length}</span>
       ${renderSlideJump(slide.n)}
     </div>
-    <div class="slide-context">${esc(slide.session)}${slide.hour ? " · " + esc(slide.hour) : ""}</div>
+    <div class="slide-context">${esc(agendaContextFor(slide))}</div>
     <div class="slide-card">
       <h1>${esc(slide.title)}</h1>
       <div class="slide-body">${slide.bodyHtml}</div>
@@ -405,7 +447,11 @@ function render() {
     view === "assessment" ? renderAssessment(id, sub) :
     view === "datafiles" ? renderDataFiles() :
     search.value ? renderSearch(search.value) : renderHome();
-  document.querySelector("#sidebar").classList.remove("open");
+  const sidebarEl = document.querySelector("#sidebar");
+  if (!sidebarEl.classList.contains("pinned")) {
+    sidebarEl.classList.remove("open");
+    document.querySelector("#sidebar-backdrop").classList.remove("show");
+  }
   window.scrollTo(0, 0);
 }
 
@@ -486,7 +532,32 @@ document.querySelector("#app").addEventListener("submit", event => {
   }
 });
 document.querySelector("#search").addEventListener("input", event => { const next = event.target.value.trim() ? "search" : "start"; if (location.hash === `#${next}`) render(); else setViewHash(next); });
-document.querySelector("#menu-button").addEventListener("click", () => document.querySelector("#sidebar").classList.toggle("open"));
+const sidebarEl = document.querySelector("#sidebar");
+const backdropEl = document.querySelector("#sidebar-backdrop");
+const pinButton = document.querySelector("#pin-button");
+
+function setSidebarOpen(open) {
+  sidebarEl.classList.toggle("open", open);
+  backdropEl.classList.toggle("show", open && !sidebarEl.classList.contains("pinned"));
+}
+function setSidebarPinned(pinned) {
+  sidebarEl.classList.toggle("pinned", pinned);
+  document.body.classList.toggle("sidebar-pinned", pinned);
+  pinButton.setAttribute("aria-pressed", String(pinned));
+  save("pq-sidebar-pinned", pinned);
+  backdropEl.classList.toggle("show", sidebarEl.classList.contains("open") && !pinned);
+}
+
+document.querySelector("#menu-button").addEventListener("click", () => setSidebarOpen(!sidebarEl.classList.contains("open")));
+backdropEl.addEventListener("click", () => setSidebarOpen(false));
+pinButton.addEventListener("click", () => {
+  const nextPinned = !sidebarEl.classList.contains("pinned");
+  setSidebarPinned(nextPinned);
+  setSidebarOpen(nextPinned);
+  toast(nextPinned ? "ปักหมุดเมนูแล้ว — เปิดค้างไว้ทุกครั้ง" : "เลิกปักหมุดเมนูแล้ว");
+});
+setSidebarPinned(stored("pq-sidebar-pinned", false));
+
 document.querySelector("#theme-button").addEventListener("click", () => { const next = document.documentElement.dataset.theme === "dark" ? "" : "dark"; document.documentElement.dataset.theme = next; localStorage.setItem("pq-theme", next); });
 document.documentElement.dataset.theme = localStorage.getItem("pq-theme") || "";
 window.addEventListener("hashchange", render);
