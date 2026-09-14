@@ -409,10 +409,12 @@ p { margin: 0 0 14px; }
 .agenda-duration-cell { white-space: nowrap; color: #4b5259; font-size: 12px; }
 .agenda-table tr.agenda-session-a td { background: #fbe5d6; }
 .agenda-table tr.agenda-session-b td { background: #deebf7; }
+.agenda-table tr.agenda-session-c td { background: #e2efda; }
 .agenda-table tr.agenda-break-row td { background: #d9d9d9 !important; color: #595959; font-style: italic; text-align: center; }
 .agenda-legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 13px; color: var(--muted); }
 .agenda-legend span { display: inline-flex; align-items: center; gap: 7px; }
 .agenda-swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; border: 1px solid #0002; }
 .agenda-swatch.agenda-session-a { background: #fbe5d6; }
 .agenda-swatch.agenda-session-b { background: #deebf7; }
+.agenda-swatch.agenda-session-c { background: #e2efda; }
 .agenda-swatch-break { background: #d9d9d9; }

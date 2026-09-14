@@ -893,7 +893,7 @@ function firstSlideForHour(hourNum) {
 }
 
 function renderAgendaPage() {
-  const sessionColors = ["agenda-session-a", "agenda-session-b"];
+  const sessionColors = ["agenda-session-a", "agenda-session-b", "agenda-session-c"];
   const bodyHtml = courseAgenda.map((sess, sIdx) => sess.items.map((it, idx) => {
     const sessionCell = idx === 0
       ? `<td class="agenda-session-cell ${sessionColors[sIdx]}" rowspan="${sess.items.length}"><strong>${esc(sess.session)}</strong><br><small>${esc(sess.sessionEn)}</small></td>`
@@ -913,7 +913,7 @@ function renderAgendaPage() {
     <thead><tr><th>Session</th><th>Hour</th><th>Learning Objective</th><th>Key Activity / Exercise</th><th>Duration</th></tr></thead>
     <tbody>${bodyHtml}</tbody>
   </table></div>
-  <div class="agenda-legend"><span><i class="agenda-swatch agenda-session-a"></i>Day 1 ช่วงเช้า</span><span><i class="agenda-swatch agenda-session-b"></i>Day 1 ช่วงบ่าย</span><span><i class="agenda-swatch agenda-swatch-break"></i>พัก</span></div>
+  <div class="agenda-legend">${courseAgenda.map((sess, sIdx) => `<span><i class="agenda-swatch ${sessionColors[sIdx]}"></i>${esc(sess.session.split(" — ")[0])}</span>`).join("")}<span><i class="agenda-swatch agenda-swatch-break"></i>พัก</span></div>
   </section>`;
 }
 
