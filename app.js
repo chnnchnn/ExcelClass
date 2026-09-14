@@ -947,7 +947,11 @@ function renderSlides(id) {
   return `<section class="slide-deck">
     <div class="slide-toolbar">
       <button class="ghost-button" data-view="slides">← สารบัญสไลด์</button>
-      <span class="slide-counter">สไลด์ ${slide.n} / ${slidesData.length}</span>
+      <div class="slide-quick-nav">
+        <button type="button" class="slide-arrow-btn" data-view="slides" data-id="${prev ? prev.n : slide.n}" ${prev ? "" : "disabled"} aria-label="แผ่นก่อนหน้า" title="แผ่นก่อนหน้า">‹</button>
+        <span class="slide-counter">สไลด์ ${slide.n} / ${slidesData.length}</span>
+        <button type="button" class="slide-arrow-btn" data-view="slides" data-id="${next ? next.n : slide.n}" ${next ? "" : "disabled"} aria-label="แผ่นถัดไป" title="แผ่นถัดไป">›</button>
+      </div>
       ${renderSlideJump(slide.n)}
     </div>
     <div class="slide-context">${esc(agendaContextFor(slide))}</div>
@@ -955,12 +959,12 @@ function renderSlides(id) {
       <h1>${esc(slide.title)}</h1>
       <div class="slide-body">${slide.bodyHtml}</div>
     </div>
-    ${isInstructorDevice() ? `<button type="button" class="reveal-btn" data-open="แสดงโน้ตผู้สอน" data-close="ซ่อนโน้ตผู้สอน">แสดงโน้ตผู้สอน</button>
-    <div class="reveal-panel notes-panel">${slide.notesHtml || "<p>ไม่มีโน้ตเพิ่มเติมสำหรับแผ่นนี้</p>"}</div>` : ""}
     <div class="slide-nav-buttons">
       <button class="ghost-button" data-view="slides" data-id="${prev ? prev.n : slide.n}" ${prev ? "" : "disabled"}>← แผ่นก่อนหน้า</button>
+      ${isInstructorDevice() ? `<button type="button" class="reveal-btn" data-open="แสดงโน้ตผู้สอน" data-close="ซ่อนโน้ตผู้สอน">แสดงโน้ตผู้สอน</button>` : "<span></span>"}
       <button class="primary-button" data-view="slides" data-id="${next ? next.n : slide.n}" ${next ? "" : "disabled"}>แผ่นถัดไป →</button>
     </div>
+    ${isInstructorDevice() ? `<div class="reveal-panel notes-panel">${slide.notesHtml || "<p>ไม่มีโน้ตเพิ่มเติมสำหรับแผ่นนี้</p>"}</div>` : ""}
   </section>`;
 }
 

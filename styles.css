@@ -194,6 +194,10 @@ p { margin: 0 0 14px; }
 /* Slide deck */
 .slide-toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
 .slide-counter { font: 500 13px "IBM Plex Mono", monospace; color: var(--muted); }
+.slide-quick-nav { display: flex; align-items: center; gap: 10px; }
+.slide-arrow-btn { width: 32px; height: 32px; flex: none; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--ink); font-size: 19px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.slide-arrow-btn:hover:not(:disabled) { border-color: var(--green); color: var(--green); background: color-mix(in srgb, var(--green) 8%, var(--surface)); }
+.slide-arrow-btn:disabled { opacity: .35; cursor: not-allowed; }
 .slide-jump { margin-left: auto; max-width: 320px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: 13px; }
 .slide-context { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
 .slide-card { padding: 28px clamp(20px, 4vw, 40px); border: 1px solid var(--line); border-radius: 14px; background: var(--surface); min-height: 780px; }
@@ -205,8 +209,11 @@ p { margin: 0 0 14px; }
 .slide-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
 .slide-table th, .slide-table td { padding: 9px 11px; text-align: left; border: 1px solid var(--line); }
 .slide-table th { background: color-mix(in srgb, var(--green) 10%, var(--surface)); }
-.notes-panel { margin-top: 6px; }
-.slide-nav-buttons { display: flex; justify-content: space-between; gap: 12px; margin-top: 26px; }
+.notes-panel { margin-top: 14px; }
+.slide-nav-buttons { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin-top: 26px; }
+.slide-nav-buttons > *:first-child { justify-self: start; }
+.slide-nav-buttons > *:nth-child(2) { justify-self: center; }
+.slide-nav-buttons > *:last-child { justify-self: end; }
 
 /* Assessment */
 .tab-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 22px 0 14px; border-bottom: 1px solid var(--line); }
