@@ -581,6 +581,7 @@ function isInstructorDevice() { return localStorage.getItem(INSTRUCTOR_FLAG_KEY)
 const CHAT_POLL_INTERVAL_MS = 4000;
 const MAX_CHAT_MESSAGE_LENGTH = 500; // keep in sync with MAX_CHAT_MESSAGE_LENGTH in backend/Code.gs
 let chatMessages = [];
+let chatPendingMessages = []; // shown immediately on send, before the backend round-trip confirms them — removed once the real fetched message matches
 let chatLastId = 0;
 let chatLoaded = false;
 let chatUnreadCount = 0;
@@ -598,14 +599,15 @@ function formatChatTime(iso) {
 function renderChatMessages() {
   const box = document.querySelector("#chat-messages");
   if (!box) return;
-  if (!chatMessages.length) {
+  const combined = [...chatMessages, ...chatPendingMessages];
+  if (!combined.length) {
     box.innerHTML = `<p class="chat-empty">ยังไม่มีข้อความ เริ่มพิมพ์คำถามได้เลย</p>`;
     return;
   }
   const me = studentName();
-  box.innerHTML = chatMessages.map(m => `
-    <div class="chat-message ${m.name === me ? "own" : ""}">
-      <div class="chat-message-meta"><strong>${esc(m.name || "ไม่ระบุชื่อ")}</strong><span>${esc(formatChatTime(m.time))}</span></div>
+  box.innerHTML = combined.map(m => `
+    <div class="chat-message ${m.name === me ? "own" : ""} ${m.clientId ? "pending" : ""}">
+      <div class="chat-message-meta"><strong>${esc(m.name || "ไม่ระบุชื่อ")}</strong><span>${m.clientId ? "กำลังส่ง..." : esc(formatChatTime(m.time))}</span></div>
       <div class="chat-message-text">${esc(m.message)}</div>
     </div>`).join("");
   box.scrollTop = box.scrollHeight;
@@ -637,6 +639,11 @@ async function fetchChatMessages() {
     chatMessages.push(...freshMessages);
     if (chatMessages.length > 300) chatMessages = chatMessages.slice(-300);
     chatLastId = Math.max(chatLastId, ...data.messages.map(m => m.id));
+    // the real, server-confirmed copy has arrived — drop the optimistic stand-in so it isn't shown twice
+    freshMessages.forEach(m => {
+      const idx = chatPendingMessages.findIndex(p => p.name === m.name && p.message === m.message);
+      if (idx !== -1) chatPendingMessages.splice(idx, 1);
+    });
     const panel = document.querySelector("#chat-panel");
     if (panel && panel.classList.contains("open")) {
       renderChatMessages();
@@ -669,6 +676,14 @@ async function sendChatMessage(text) {
   const sendBtn = document.querySelector("#chat-form button[type=submit]");
   input.disabled = true;
   sendBtn.disabled = true;
+
+  // show it right away instead of waiting on the round-trip to Apps Script (which can take a
+  // couple of seconds) — the next poll reconciles this with the server-confirmed copy
+  const clientId = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  chatPendingMessages.push({ clientId, name, message, time: new Date().toISOString() });
+  input.value = "";
+  renderChatMessages();
+
   try {
     const res = await fetch(GAS_ENDPOINT, {
       method: "POST",
@@ -676,14 +691,15 @@ async function sendChatMessage(text) {
       body: JSON.stringify({ type: "chat", secret: GAS_SECRET, name, message }),
     });
     const data = await res.json();
-    if (data.ok) {
-      input.value = "";
-      await fetchChatMessages();
-    } else {
+    if (!data.ok) {
       toast("ส่งข้อความไม่สำเร็จ: " + (data.error || "unknown error"));
+      chatPendingMessages = chatPendingMessages.filter(p => p.clientId !== clientId);
+      renderChatMessages();
     }
   } catch (err) {
     toast("ส่งข้อความไม่สำเร็จ ลองใหม่อีกครั้ง");
+    chatPendingMessages = chatPendingMessages.filter(p => p.clientId !== clientId);
+    renderChatMessages();
   } finally {
     chatSendInFlight = false;
     input.disabled = false;
