@@ -163,6 +163,13 @@ p { margin: 0 0 14px; }
 /* ---- Class workspace additions ---- */
 .nav-group-label { margin: 18px 0 4px; padding: 0 10px; font: 500 11px "IBM Plex Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: #82c69a; opacity: .85; }
 .nav-group-label:first-child { margin-top: 4px; }
+.nav-group-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; border: 0; background: none; cursor: pointer; }
+.nav-group-toggle:hover { color: #b9e2c8; }
+.nav-group-chevron { display: inline-block; font-size: 12px; transition: transform .6s cubic-bezier(0.65, 0, 0.35, 1); }
+.nav-group-toggle[aria-expanded="false"] .nav-group-chevron { transform: rotate(-90deg); }
+.nav-group-collapse { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .6s cubic-bezier(0.65, 0, 0.35, 1); }
+.nav-group-collapse.collapsed { grid-template-rows: 0fr; }
+.nav-group-collapse-inner { overflow: hidden; min-height: 0; }
 
 .ghost-button { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 9px 13px; font-weight: 600; font-size: 14px; }
 .ghost-button:hover { border-color: var(--green); color: var(--green); }

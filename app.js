@@ -763,6 +763,19 @@ async function uploadHomeworkFile(file) {
   }
 }
 
+function navCollapsibleGroup(key, label, linksHtml) {
+  // always starts collapsed on a fresh page load (not remembered across visits) -- purely a
+  // within-session declutter toggle, expanded state is not persisted to localStorage
+  return `
+    <button type="button" class="nav-group-label nav-group-toggle" data-nav-group="${key}" aria-expanded="false">
+      <span>${esc(label)}</span>
+      <span class="nav-group-chevron">▾</span>
+    </button>
+    <div class="nav-group-collapse collapsed" data-nav-group-panel="${key}">
+      <div class="nav-group-collapse-inner">${linksHtml}</div>
+    </div>`;
+}
+
 function renderNav() {
   const chapterLinks = chapters.map(c => `<button class="nav-link" data-view="chapter" data-id="${c.id}"><span class="nav-number">${c.number}</span>${esc(c.title)}</button>`).join("");
   const exerciseLinks = exercisesData.map(e => `<button class="nav-link" data-view="exercise" data-id="${e.id}"><span class="nav-number">${String(e.id).padStart(2, "0")}</span>${esc(e.title)}</button>`).join("");
@@ -772,15 +785,19 @@ function renderNav() {
     <button class="nav-link" data-view="slides-resume"><span class="nav-number">▤</span>สไลด์บรรยาย (87 แผ่น)</button>
     <button class="nav-link" data-view="whiteboard"><span class="nav-number">🖊️</span>Whiteboard</button>
     <button class="nav-link" data-view="notes"><span class="nav-number">📝</span>Note</button>
-    <div class="nav-group-label">คู่มือผู้เรียน · 7 บท</div>
-    ${chapterLinks}
-    <div class="nav-group-label">แบบฝึกหัด · 7 ชุด</div>
-    ${exerciseLinks}
+    ${navCollapsibleGroup("chapters", "คู่มือผู้เรียน · 7 บท", chapterLinks)}
+    ${navCollapsibleGroup("exercises", "แบบฝึกหัด · 7 ชุด", exerciseLinks)}
     <button class="nav-link" data-view="workshop"><span class="nav-number">★</span>Workshop สุดท้าย</button>
     <div class="nav-group-label">วัดผลและทรัพยากร</div>
     <button class="nav-link" data-view="assessment"><span class="nav-number">✎</span>แบบทดสอบและความมั่นใจ</button>
     <button class="nav-link" data-view="datafiles"><span class="nav-number">⇩</span>ไฟล์ฝึกปฏิบัติ</button>
   `;
+  document.querySelectorAll(".nav-group-toggle").forEach(btn => btn.addEventListener("click", () => {
+    const key = btn.dataset.navGroup;
+    const panel = document.querySelector(`[data-nav-group-panel="${key}"]`);
+    const collapsed = panel.classList.toggle("collapsed");
+    btn.setAttribute("aria-expanded", String(!collapsed));
+  }));
 }
 
 function exercisesPassedCount() {
