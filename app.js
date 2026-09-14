@@ -917,6 +917,18 @@ function renderAgendaPage() {
   </section>`;
 }
 
+// The Course Structure slide (n=3) lists each hour as a plain "<td>ชม. N</td>" cell —
+// turn those into the same kind of hour-jump link Class Agenda uses.
+function linkifyCourseStructureHours(html) {
+  return html.replace(/<td>ชม\.\s*(\d+)<\/td>/g, (match, hourStr) => {
+    const hourNum = parseInt(hourStr, 10);
+    const slideN = firstSlideForHour(hourNum);
+    return slideN
+      ? `<td class="agenda-hour-cell agenda-hour-link" data-view="slides" data-id="${slideN}" title="ไปที่สไลด์บรรยายของชั่วโมงนี้">ชม. ${hourNum} →</td>`
+      : match;
+  });
+}
+
 function renderSlides(id) {
   const n = parseInt(id, 10);
   const slide = slidesData.find(s => s.n === n);
@@ -957,7 +969,7 @@ function renderSlides(id) {
     <div class="slide-context">${esc(agendaContextFor(slide))}</div>
     <div class="slide-card">
       <h1>${esc(slide.title)}</h1>
-      <div class="slide-body">${slide.bodyHtml}</div>
+      <div class="slide-body">${slide.n === 3 ? linkifyCourseStructureHours(slide.bodyHtml) : slide.bodyHtml}</div>
     </div>
     <div class="slide-nav-buttons">
       <button class="ghost-button" data-view="slides" data-id="${prev ? prev.n : slide.n}" ${prev ? "" : "disabled"}>← แผ่นก่อนหน้า</button>
