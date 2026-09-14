@@ -859,6 +859,8 @@ const formulaCheatSheetLevels = [
       { name: "if ... then ... else", purpose: "สร้างเงื่อนไขแบบ IF ในคอลัมน์คำนวณ", example: `if [ยอด] > 10000 then "สูง" else "ปกติ"`, result: `"สูง" หรือ "ปกติ"`, useCase: "พื้นฐานของ Conditional Column และ Custom Column แทบทุกสูตร (บทที่ 6)" },
       { name: "Number.Round", purpose: "ปัดเศษตัวเลขตามจำนวนทศนิยมที่กำหนด", example: `Number.Round(12.567, 2)`, result: `12.57`, useCase: "ใช้ก่อนสรุปยอดขายหรือแสดงผลตัวเลขให้อ่านง่าย" },
       { name: "Text.Contains", purpose: "ตรวจสอบว่าข้อความมีคำที่ต้องการอยู่หรือไม่", example: `Text.Contains("Invoice-2026", "2026")`, result: `TRUE`, useCase: "ใช้กรองแถวหรือสร้างเงื่อนไขจากข้อความบางส่วน เช่น รหัสสาขา" },
+      { name: "Text.Length", purpose: "หาความยาวของข้อความ (จำนวนตัวอักษร)", example: `Text.Length("C007")`, result: `4`, useCase: "ใช้ตรวจสอบว่ารหัสสินค้าหรือรหัสลูกค้ามีความยาวถูกต้องตามมาตรฐานหรือไม่" },
+      { name: "Text.Replace", purpose: "แทนที่ข้อความบางส่วนด้วยข้อความใหม่", example: `Text.Replace("2026-03-15", "-", "/")`, result: `"2026/03/15"`, useCase: "ใช้แก้รูปแบบวันที่หรือแทนที่อักขระที่ไม่ต้องการก่อนแปลงชนิดข้อมูล (บทที่ 3)" },
     ],
   },
   {
@@ -869,6 +871,9 @@ const formulaCheatSheetLevels = [
       { name: "Text.Start / Text.End / Text.Middle", purpose: "ตัดข้อความบางส่วนตามตำแหน่งที่ระบุ", example: `Text.Start("1234567890", 3)`, result: `"123"`, useCase: "ดึงรหัสไปรษณีย์ รหัสสาขา หรือคำนำหน้าจากรหัสยาว" },
       { name: "Number.From / Text.From", purpose: "แปลงชนิดข้อมูลไปมาระหว่างข้อความกับตัวเลข", example: `Number.From("1250")`, result: `1250`, useCase: "ใช้ตอนคอลัมน์ตัวเลขถูกนำเข้ามาเป็นข้อความ (Change Type ตรง ๆ ไม่ได้)" },
       { name: "List.Sum / List.Average", purpose: "สรุปยอดรวมหรือค่าเฉลี่ยของรายการตัวเลข", example: `List.Sum({100, 200, 300})`, result: `600`, useCase: "ใช้คู่กับ Table.Group เพื่อสรุปยอดขายตามภาค (บทที่ 5)" },
+      { name: "Number.Abs", purpose: "หาค่าสัมบูรณ์ของตัวเลข (ตัดเครื่องหมายลบออก)", example: `Number.Abs(-150)`, result: `150`, useCase: "ใช้เทียบขนาดส่วนต่างของยอด โดยไม่สนใจว่าเป็นบวกหรือลบ" },
+      { name: "Date.DayOfWeek", purpose: "หาว่าวันที่ตรงกับวันใดในสัปดาห์ (0 = วันอาทิตย์)", example: `Date.DayOfWeek(#date(2026,3,15))`, result: `0`, useCase: "ใช้แยกยอดขายวันธรรมดากับวันหยุดสุดสัปดาห์" },
+      { name: "Text.Split", purpose: "แบ่งข้อความออกเป็นรายการย่อยตามตัวคั่นที่กำหนด", example: `Text.Split("A-B-C", "-")`, result: `{"A", "B", "C"}`, useCase: "เป็นกลไกเบื้องหลังของ Split Column by Delimiter ที่ใช้ในบทที่ 5" },
     ],
   },
   {
@@ -879,6 +884,10 @@ const formulaCheatSheetLevels = [
       { name: "try ... otherwise", purpose: "ดักจับ Error แล้วใส่ค่าสำรองแทนการให้ Query ล้มทั้งก้อน", example: `try Number.From([ยอด]) otherwise 0`, result: `ตัวเลข หรือ 0 ถ้าแปลงไม่ได้`, useCase: "ป้องกัน Query พังเวลาเจอข้อมูลเสียบางแถว — แต่ต้องตรวจทีหลังว่าไม่ได้ซ่อนปัญหาไว้ (บทที่ 6)" },
       { name: "Date.StartOfMonth / Date.EndOfMonth", purpose: "หาวันแรกหรือวันสุดท้ายของเดือนจากวันที่ที่กำหนด", example: `Date.StartOfMonth(#date(2026,3,15))`, result: `2026-03-01`, useCase: "จัดกลุ่มข้อมูลรายเดือนให้ทุกแถวในเดือนเดียวกันมีค่าเดียวกัน" },
       { name: "each _", purpose: "ฟังก์ชันนิรนาม (anonymous function) แทนตัวแปรที่วนซ้ำทีละแถว", example: `List.Transform({1,2,3}, each _ * 2)`, result: `{2, 4, 6}`, useCase: "พบในสูตร Table.SelectRows, Table.AddColumn และ Table.Group แทบทุกครั้ง" },
+      { name: "Number.Mod", purpose: "หาเศษที่เหลือจากการหารตัวเลข", example: `Number.Mod(10, 3)`, result: `1`, useCase: "ใช้แบ่งกลุ่มข้อมูลแบบวนซ้ำ เช่น สลับสีแถวหรือแบ่งชุดตามลำดับ" },
+      { name: "Table.RenameColumns", purpose: "เปลี่ยนชื่อคอลัมน์หลายคอลัมน์พร้อมกันในขั้นตอนเดียว", example: `Table.RenameColumns(t, {{"เก่า","ใหม่"}})`, result: `คอลัมน์ "เก่า" ถูกเปลี่ยนชื่อเป็น "ใหม่"`, useCase: "จัดระเบียบชื่อคอลัมน์ให้อ่านง่ายก่อนส่งมอบ Query (บทที่ 7)" },
+      { name: "Table.ReplaceValue", purpose: "แทนที่ค่าที่ตรงเงื่อนไขในคอลัมน์ที่กำหนด", example: `Table.ReplaceValue(t, "N/A", null, Replacer.ReplaceValue, {"หมายเหตุ"})`, result: `ค่า "N/A" ในคอลัมน์ "หมายเหตุ" กลายเป็น null`, useCase: "แปลงค่าที่สะกดไม่ตรงกันให้เป็นมาตรฐานเดียวกันก่อนวิเคราะห์ (บทที่ 3)" },
+      { name: "Duration.Days", purpose: "แปลงผลต่างระหว่างวันที่สองค่าให้เป็นจำนวนวัน", example: `Duration.Days(#date(2026,3,15) - #date(2026,3,1))`, result: `14`, useCase: "คำนวณจำนวนวันค้างชำระหรืออายุของข้อมูล" },
     ],
   },
   {
@@ -887,6 +896,9 @@ const formulaCheatSheetLevels = [
       { name: "List.Distinct", purpose: "ดึงเฉพาะค่าที่ไม่ซ้ำจากรายการ", example: `List.Distinct({"A","B","A","C"})`, result: `{"A", "B", "C"}`, useCase: "ใช้ตรวจว่ามีกี่ภาคหรือกี่สาขาในข้อมูล โดยไม่ต้องสร้างตารางแยก" },
       { name: `#"ชื่อขั้นตอน ที่มีช่องว่าง"`, purpose: "วิธีอ้างอิงชื่อขั้นตอน (step) ที่มีช่องว่างในภาษา M", example: `#"Changed Type"`, result: "อ้างอิงผลลัพธ์ของขั้นตอนที่ชื่อว่า Changed Type", useCase: "ต้องเข้าใจตอนอ่านหรือแก้ M code ที่ Power Query สร้างให้อัตโนมัติ (บทที่ 6)" },
       { name: "Table.TransformColumnTypes + Using Locale", purpose: "กำหนดรูปแบบวันที่/ตัวเลขให้ตรงตามภูมิภาคตอนแปลงชนิดข้อมูล", example: `Table.TransformColumnTypes(t, {{"วันที่", type date}}, "en-GB")`, result: `05/03/2026 → 5 มีนาคม (ไม่ใช่ 3 พฤษภาคม)`, useCase: "ป้องกันวันที่แบบ วัน/เดือน/ปี ถูกตีความผิดเป็น เดือน/วัน/ปี — กับดักสำคัญของบทที่ 3" },
+      { name: "Table.FillDown", purpose: "เติมค่าว่างในคอลัมน์ด้วยค่าจากแถวด้านบนล่าสุดที่ไม่ว่าง", example: `Table.FillDown(t, {"ภาค"})`, result: `แถวที่เคยว่างในคอลัมน์ "ภาค" ได้ค่าจากแถวก่อนหน้ามาเติม`, useCase: "ใช้กับรายงานที่มีเซลล์รวม (merge) มาจาก Excel ทำให้ค่าหายไปในแถวถัดไป" },
+      { name: "Table.Buffer", purpose: "โหลดผลลัพธ์ของตารางเก็บไว้ในหน่วยความจำ ไม่ให้คำนวณซ้ำทุกครั้งที่ถูกอ้างอิง", example: `Table.Buffer(Source)`, result: `ตารางเดิม แต่ถูกล็อกไว้ในหน่วยความจำ`, useCase: "ช่วยแก้ปัญหา Query ทำงานช้าหรือผลลัพธ์ไม่คงที่เมื่อมีการอ้างอิงข้อมูลเดิมหลายจุด (หัวข้อขั้นสูงของบทที่ 7)" },
+      { name: "Custom Function", purpose: "สร้างฟังก์ชันของตัวเองเพื่อใช้สูตรเดิมซ้ำได้หลายครั้ง", example: `(n as number) => n * 1.07`, result: `ฟังก์ชันที่คูณ 1.07 ให้กับตัวเลขที่ส่งเข้าไป`, useCase: "ใช้แทนการเขียนสูตรเดิมซ้ำในหลายคอลัมน์หรือหลายไฟล์ ย่อความซับซ้อนของ Query" },
     ],
   },
 ];
