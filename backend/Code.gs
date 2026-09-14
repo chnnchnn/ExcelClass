@@ -129,6 +129,62 @@ function oneTimeAuthorizeDriveAccess() {
   Logger.log("Cleaned up test folder. All good.");
 }
 
+/**
+ * ONE-TIME CLEANUP: removes the test rows created while building and testing
+ * the chat, notes, and scores features (see the Claude Code chat history for
+ * context) from Chat, Notes, Quiz, and ExerciseSelfCheck. Not reachable from
+ * the web app or any HTTP request — run it yourself from the Apps Script
+ * editor's function dropdown + Run button, the same way as
+ * oneTimeAuthorizeDriveAccess above.
+ *
+ * Matches rows by EXACT name only (never a partial/wildcard match), against
+ * the specific placeholder names used during testing, so it can't touch a
+ * real student's row. The one name worth double-checking yourself first:
+ * "สมชาย ใจดี" — a generic-sounding test name that would coincidentally
+ * remove a real student's Quiz/ExerciseSelfCheck rows too if any of your
+ * actual learners happens to share that exact name. Check the Grade Book
+ * before running if you're unsure, and drop it from scoreTestNames below if
+ * needed. Everything else here is an obviously synthetic test identity.
+ */
+function oneTimeCleanupTestData() {
+  const ss = getOrCreateSpreadsheet_();
+
+  const chatTestNames = new Set([
+    "เพื่อนร่วมชั้น ทดสอบแจ้งเตือน", "เพื่อนร่วมชั้น คนที่สอง", "เพื่อนร่วมชั้น คนที่สาม",
+    "เพื่อนร่วมชั้น คนที่สี่", "เพื่อนร่วมชั้น คนอื่น", "ทดสอบ ระบบ", "ทดสอบ ความไว",
+    "สมชาย สายลมผสมดินกลิ่นเกสร",
+  ]);
+  removeRowsByName_(ss, "Chat", 2, chatTestNames);
+
+  const notesTestNames = new Set(["Test Deploy", "ทดสอบ ระบบ", "ทดสอบ สูตร", "ทดสอบ syntax"]);
+  removeRowsByName_(ss, "Notes", 2, notesTestNames);
+
+  const scoreTestNames = new Set([
+    "ทดสอบ นักเรียนคะแนน", "สมชาย ใจดี", "ทดสอบ คอลัมน์", "ทดสอบ คำ", "ทดสอบ คำ2", "ทดสอบ คำ3",
+  ]);
+  removeRowsByName_(ss, "Quiz", 2, scoreTestNames);
+  removeRowsByName_(ss, "ExerciseSelfCheck", 2, scoreTestNames);
+
+  Logger.log("Cleanup done. Check each sheet to confirm.");
+}
+
+function removeRowsByName_(ss, sheetName, nameCol, namesToRemove) {
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return;
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+  let removed = 0;
+  // walk bottom-up so deleting a row doesn't shift the indices of rows still to check
+  for (let r = lastRow; r >= 2; r--) {
+    const name = String(sheet.getRange(r, nameCol).getValue()).trim();
+    if (namesToRemove.has(name)) {
+      sheet.deleteRow(r);
+      removed++;
+    }
+  }
+  Logger.log(sheetName + ": removed " + removed + " row(s).");
+}
+
 function doGet(e) {
   const params = (e && e.parameter) || {};
   if (params.action === "chat") {
