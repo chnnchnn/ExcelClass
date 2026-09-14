@@ -861,6 +861,9 @@ const formulaCheatSheetLevels = [
       { name: "Text.Contains", purpose: "ตรวจสอบว่าข้อความมีคำที่ต้องการอยู่หรือไม่", example: `Text.Contains("Invoice-2026", "2026")`, result: `TRUE`, useCase: "ใช้กรองแถวหรือสร้างเงื่อนไขจากข้อความบางส่วน เช่น รหัสสาขา" },
       { name: "Text.Length", purpose: "หาความยาวของข้อความ (จำนวนตัวอักษร)", example: `Text.Length("C007")`, result: `4`, useCase: "ใช้ตรวจสอบว่ารหัสสินค้าหรือรหัสลูกค้ามีความยาวถูกต้องตามมาตรฐานหรือไม่" },
       { name: "Text.Replace", purpose: "แทนที่ข้อความบางส่วนด้วยข้อความใหม่", example: `Text.Replace("2026-03-15", "-", "/")`, result: `"2026/03/15"`, useCase: "ใช้แก้รูปแบบวันที่หรือแทนที่อักขระที่ไม่ต้องการก่อนแปลงชนิดข้อมูล (บทที่ 3)" },
+      { name: "Excel.CurrentWorkbook()", purpose: "ดึงข้อมูลจากชีทหรือตารางที่อยู่ในไฟล์ Excel เดียวกับที่ Power Query อยู่", example: `Excel.CurrentWorkbook(){[Name="ตาราง1"]}[Content]`, result: `ตารางข้อมูลจากตารางชื่อ "ตาราง1" ในไฟล์เดียวกัน`, useCase: "ใช้ตอนมีตารางช่วย (lookup table) หรือ parameter เก็บไว้ในไฟล์รายงานเดียวกัน ไม่ต้องอ้างอิง path ไฟล์ภายนอกให้พังเวลาย้ายไฟล์" },
+      { name: "[Content]", purpose: "ดึงเนื้อหาตารางจริงออกจาก record ที่ได้จาก Excel.CurrentWorkbook หรือ Excel.Workbook", example: `Source{[Name="Table1"]}[Content]`, result: "ตารางข้อมูลจริง (ไม่ใช่แค่ชื่อหรือข้อมูลอ้างอิง)", useCase: `ขั้นตอนที่ตามหลัง Excel.CurrentWorkbook หรือ Excel.Workbook แทบทุกครั้ง — ถ้าลืมจะเจอ error ว่าค่าที่ได้เป็น record ไม่ใช่ table` },
+      { name: "Table.SelectRows(t, each [คอลัมน์] <> null)", purpose: "กรองเฉพาะแถวที่คอลัมน์ที่ระบุไม่ใช่ค่าว่าง", example: `Table.SelectRows(t, each [อีเมล] <> null)`, result: "เฉพาะแถวที่คอลัมน์อีเมลมีค่า", useCase: "กำจัดแถวว่างที่ติดมาจากรายงาน Excel ก่อนนำไปวิเคราะห์ต่อ" },
     ],
   },
   {
@@ -874,6 +877,9 @@ const formulaCheatSheetLevels = [
       { name: "Number.Abs", purpose: "หาค่าสัมบูรณ์ของตัวเลข (ตัดเครื่องหมายลบออก)", example: `Number.Abs(-150)`, result: `150`, useCase: "ใช้เทียบขนาดส่วนต่างของยอด โดยไม่สนใจว่าเป็นบวกหรือลบ" },
       { name: "Date.DayOfWeek", purpose: "หาว่าวันที่ตรงกับวันใดในสัปดาห์ (0 = วันอาทิตย์)", example: `Date.DayOfWeek(#date(2026,3,15))`, result: `0`, useCase: "ใช้แยกยอดขายวันธรรมดากับวันหยุดสุดสัปดาห์" },
       { name: "Text.Split", purpose: "แบ่งข้อความออกเป็นรายการย่อยตามตัวคั่นที่กำหนด", example: `Text.Split("A-B-C", "-")`, result: `{"A", "B", "C"}`, useCase: "เป็นกลไกเบื้องหลังของ Split Column by Delimiter ที่ใช้ในบทที่ 5" },
+      { name: "Excel.Workbook(File.Contents(path))", purpose: "ดึงข้อมูลจากไฟล์ Excel อื่นที่ไม่ใช่ไฟล์ปัจจุบัน", example: `Excel.Workbook(File.Contents("C:\\Data\\Sales.xlsx"), null, true)`, result: "รายการชีทและตารางทั้งหมดในไฟล์ Sales.xlsx", useCase: "ใช้ตอนต้องดึงข้อมูลจากไฟล์ Excel ภายนอก ต่างจาก Excel.CurrentWorkbook() ที่ดึงจากไฟล์เดียวกัน (บทที่ 2)" },
+      { name: "Table.SelectRows(t, each ... and/or ...)", purpose: "กรองแถวตามหลายเงื่อนไขพร้อมกันในสูตรเดียว", example: `Table.SelectRows(t, each [ภาค] = "เหนือ" and [ยอด] > 1000)`, result: "เฉพาะแถวภาคเหนือที่ยอดเกิน 1,000", useCase: "กรองข้อมูลตามเงื่อนไขซับซ้อนโดยไม่ต้องกรองทีละคอลัมน์ผ่านหน้าจอหลายรอบ" },
+      { name: "Table.TransformColumns", purpose: "แก้ไขค่าทั้งคอลัมน์เดิมโดยไม่ต้องสร้างคอลัมน์คำนวณใหม่", example: `Table.TransformColumns(t, {{"ยอด", each _ * 1.07}})`, result: `คอลัมน์ "ยอด" ทุกแถวถูกคูณด้วย 1.07 (เช่น บวก VAT)`, useCase: "เร็วกว่าการเพิ่มคอลัมน์ใหม่แล้วลบคอลัมน์เก่า เพราะแก้ค่าที่คอลัมน์เดิมได้ในขั้นตอนเดียว" },
     ],
   },
   {
@@ -888,6 +894,8 @@ const formulaCheatSheetLevels = [
       { name: "Table.RenameColumns", purpose: "เปลี่ยนชื่อคอลัมน์หลายคอลัมน์พร้อมกันในขั้นตอนเดียว", example: `Table.RenameColumns(t, {{"เก่า","ใหม่"}})`, result: `คอลัมน์ "เก่า" ถูกเปลี่ยนชื่อเป็น "ใหม่"`, useCase: "จัดระเบียบชื่อคอลัมน์ให้อ่านง่ายก่อนส่งมอบ Query (บทที่ 7)" },
       { name: "Table.ReplaceValue", purpose: "แทนที่ค่าที่ตรงเงื่อนไขในคอลัมน์ที่กำหนด", example: `Table.ReplaceValue(t, "N/A", null, Replacer.ReplaceValue, {"หมายเหตุ"})`, result: `ค่า "N/A" ในคอลัมน์ "หมายเหตุ" กลายเป็น null`, useCase: "แปลงค่าที่สะกดไม่ตรงกันให้เป็นมาตรฐานเดียวกันก่อนวิเคราะห์ (บทที่ 3)" },
       { name: "Duration.Days", purpose: "แปลงผลต่างระหว่างวันที่สองค่าให้เป็นจำนวนวัน", example: `Duration.Days(#date(2026,3,15) - #date(2026,3,1))`, result: `14`, useCase: "คำนวณจำนวนวันค้างชำระหรืออายุของข้อมูล" },
+      { name: "Source{0}[คอลัมน์]", purpose: "เข้าถึงค่าของแถวแรก (index เริ่มที่ 0) ในคอลัมน์ที่ระบุ", example: `Source{0}[วันที่]`, result: `ค่าของคอลัมน์ "วันที่" ในแถวแรกของตาราง`, useCase: "ใช้ตอนต้องดึงค่าตัวเดียวออกจากตาราง เช่น วันที่ล่าสุดหรือชื่อไฟล์ ไปใช้ต่อในขั้นตอนอื่น" },
+      { name: "#shared", purpose: "แสดงรายชื่อฟังก์ชันในตัวทั้งหมดของภาษา M", example: `= #shared`, result: "ตารางรายชื่อฟังก์ชันในตัว ค้นหาได้ทันที", useCase: "หาฟังก์ชันที่จำชื่อเต็มไม่ได้ โดยพิมพ์คำที่จำได้บางส่วน เช่น Date. แล้วกรองดูในผลลัพธ์" },
     ],
   },
   {
