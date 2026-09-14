@@ -153,6 +153,17 @@ p { margin: 0 0 14px; }
 .review { border: 1px solid var(--line); padding: 18px; background: var(--surface); }
 .review strong { color: var(--green); }
 .code-block { overflow-x: auto; margin: 12px 0 28px; padding: 15px; border-radius: var(--radius); background: #102219; color: #e5f5e9; font: 13px/1.7 "IBM Plex Mono", monospace; white-space: pre; }
+.formula-list { display: grid; gap: 14px; margin: 12px 0 8px; }
+.formula-card { border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; background: var(--surface); }
+.formula-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.formula-num { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.formula-name { font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 15px; color: var(--green-dark); word-break: break-word; }
+.formula-purpose { margin: 0 0 10px; }
+.formula-example { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 10px; padding: 10px 12px; background: var(--paper); border-radius: 8px; font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+.formula-example code { background: none; padding: 0; }
+.formula-arrow { color: var(--muted); flex: none; }
+.formula-result { color: var(--green-dark); font-weight: 600; }
+.formula-usecase { margin: 0; font-size: 13px; color: var(--muted); }
 .search-results { display: grid; gap: 10px; margin-top: 22px; }
 .result { padding: 16px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); }
 .result button { padding: 0; border: 0; background: transparent; color: var(--green); font-weight: 700; text-align: left; }

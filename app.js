@@ -437,7 +437,7 @@ async function noteSaveToSheet() {
   }
   persistNotes();
   syncToBackend("notes", { title, content });
-  toast("บันทึกลง Google Sheet แล้ว");
+  toast("บันทึกเข้าระบบแล้ว");
   render();
 }
 function noteSaveAsTxt() {
@@ -465,7 +465,7 @@ function renderNotes() {
   return `<section class="notes-page">
     <div class="notes-toolbar">
       <button type="button" id="note-new" class="ghost-button">🆕 บันทึกใหม่</button>
-      <button type="button" id="note-save-sheet" class="primary-button">💾 บันทึกลง Google Sheet</button>
+      <button type="button" id="note-save-sheet" class="primary-button">💾 บันทึกเข้าระบบ</button>
       <button type="button" id="note-save-txt" class="primary-button">⬇ บันทึกเป็นไฟล์ .txt</button>
       <button type="button" id="note-delete" class="ghost-button" ${noteActiveId ? "" : "disabled"}>🗑 ลบบันทึกนี้</button>
     </div>
@@ -777,7 +777,8 @@ function navCollapsibleGroup(key, label, linksHtml) {
 }
 
 function renderNav() {
-  const chapterLinks = chapters.map(c => `<button class="nav-link" data-view="chapter" data-id="${c.id}"><span class="nav-number">${c.number}</span>${esc(c.title)}</button>`).join("");
+  const chapterLinks = chapters.map(c => `<button class="nav-link" data-view="chapter" data-id="${c.id}"><span class="nav-number">${c.number}</span>${esc(c.title)}</button>`).join("")
+    + `<button class="nav-link" data-view="formulacheatsheet"><span class="nav-number">Σ</span>Formula Cheat Sheet</button>`;
   const exerciseLinks = exercisesData.map(e => `<button class="nav-link" data-view="exercise" data-id="${e.id}"><span class="nav-number">${String(e.id).padStart(2, "0")}</span>${esc(e.title)}</button>`).join("");
   document.querySelector("#chapter-nav").innerHTML = `
     <div class="nav-group-label">ห้องเรียน</div>
@@ -846,6 +847,64 @@ function renderCheatsheet() {
     ["ตรรกะ รายการ และ Error", `if ... then ... else ...\nand    or    not\n[คอลัมน์] = null\ntry ... otherwise ค่าสำรอง\nList.Sum({...})  List.Max({...})\n#"ชื่อ ที่มีช่องว่าง"\n#shared`]
   ];
   return `<section><div class="eyebrow">Reference</div><h1>M Cheat Sheet</h1><p class="lede">ไม่ต้องจำทั้งหมดในครั้งแรก เริ่มจำ 5 ตัวนี้ก่อน: <code>Text.Trim</code>, <code>Table.SelectRows</code>, <code>Table.AddColumn</code>, <code>Date.StartOfMonth</code> และ <code>try otherwise</code>.</p>${code.map(([title, value]) => `<h2 style="margin-top:42px">${title}</h2><pre class="code-block">${esc(value)}</pre>`).join("")}<div class="side-note"><strong>หาฟังก์ชันโดยไม่ต้องท่อง</strong>สร้าง Blank Query แล้วพิมพ์ <code>= #shared</code> ในแถบสูตร จากนั้นกรองด้วยคำที่ต้องการ เช่น <code>Date.</code> หรือ <code>Text.</code>.</div></section>`;
+}
+
+// เรียงจากสูตรพื้นฐานที่ใช้บ่อยที่สุดไปจนถึงสูตรซับซ้อนที่นาน ๆ ใช้ที คัดเฉพาะสูตรที่สอนจริงในคอร์สนี้
+const formulaCheatSheetLevels = [
+  {
+    label: "ระดับเริ่มต้น · ใช้บ่อยที่สุด",
+    formulas: [
+      { name: "Text.Trim", purpose: "ตัดช่องว่างเกินหน้า-หลังข้อความออก", example: `Text.Trim("  C007  ")`, result: `"C007"`, useCase: "ใช้ก่อนลบแถวซ้ำหรือ Merge เสมอ เพราะช่องว่างที่มองไม่เห็นทำให้ Power Query มองว่าเป็นคนละค่า (บทที่ 3)" },
+      { name: "Text.Upper / Text.Lower / Text.Proper", purpose: "ปรับตัวพิมพ์ให้เป็นมาตรฐานเดียวกัน", example: `Text.Proper("bangkok")`, result: `"Bangkok"`, useCase: "ทำให้ข้อความที่สะกดต่างกันแค่ตัวพิมพ์ถูกนับเป็นค่าเดียวกัน (บทที่ 3)" },
+      { name: "if ... then ... else", purpose: "สร้างเงื่อนไขแบบ IF ในคอลัมน์คำนวณ", example: `if [ยอด] > 10000 then "สูง" else "ปกติ"`, result: `"สูง" หรือ "ปกติ"`, useCase: "พื้นฐานของ Conditional Column และ Custom Column แทบทุกสูตร (บทที่ 6)" },
+      { name: "Number.Round", purpose: "ปัดเศษตัวเลขตามจำนวนทศนิยมที่กำหนด", example: `Number.Round(12.567, 2)`, result: `12.57`, useCase: "ใช้ก่อนสรุปยอดขายหรือแสดงผลตัวเลขให้อ่านง่าย" },
+      { name: "Text.Contains", purpose: "ตรวจสอบว่าข้อความมีคำที่ต้องการอยู่หรือไม่", example: `Text.Contains("Invoice-2026", "2026")`, result: `TRUE`, useCase: "ใช้กรองแถวหรือสร้างเงื่อนไขจากข้อความบางส่วน เช่น รหัสสาขา" },
+    ],
+  },
+  {
+    label: "ใช้บ่อยระหว่างแปลงข้อมูล",
+    formulas: [
+      { name: "Date.Year / Date.Month", purpose: "ดึงปีหรือเดือนออกจากวันที่", example: `Date.Month(#date(2026,3,15))`, result: `3`, useCase: "ใช้ทำ Group By สรุปยอดรายเดือนหรือรายปี (บทที่ 5)" },
+      { name: "Text.Combine", purpose: "รวมข้อความจากหลายคอลัมน์เข้าด้วยกัน โดยคั่นด้วยอักขระที่กำหนด", example: `Text.Combine({"สมชาย", "ใจดี"}, " ")`, result: `"สมชาย ใจดี"`, useCase: "รวมชื่อ-นามสกุล หรือสร้างรหัสอ้างอิงจากหลายคอลัมน์" },
+      { name: "Text.Start / Text.End / Text.Middle", purpose: "ตัดข้อความบางส่วนตามตำแหน่งที่ระบุ", example: `Text.Start("1234567890", 3)`, result: `"123"`, useCase: "ดึงรหัสไปรษณีย์ รหัสสาขา หรือคำนำหน้าจากรหัสยาว" },
+      { name: "Number.From / Text.From", purpose: "แปลงชนิดข้อมูลไปมาระหว่างข้อความกับตัวเลข", example: `Number.From("1250")`, result: `1250`, useCase: "ใช้ตอนคอลัมน์ตัวเลขถูกนำเข้ามาเป็นข้อความ (Change Type ตรง ๆ ไม่ได้)" },
+      { name: "List.Sum / List.Average", purpose: "สรุปยอดรวมหรือค่าเฉลี่ยของรายการตัวเลข", example: `List.Sum({100, 200, 300})`, result: `600`, useCase: "ใช้คู่กับ Table.Group เพื่อสรุปยอดขายตามภาค (บทที่ 5)" },
+    ],
+  },
+  {
+    label: "ซับซ้อนขึ้น ใช้เฉพาะกรณี",
+    formulas: [
+      { name: "Date.AddDays / Date.AddMonths", purpose: "บวกหรือลบจำนวนวัน/เดือนจากวันที่", example: `Date.AddDays(#date(2026,3,1), 30)`, result: `2026-03-31`, useCase: "คำนวณวันครบกำหนดชำระหรือวันหมดอายุสัญญา" },
+      { name: "Text.PadStart", purpose: "เติมอักขระ (เช่น เลข 0) ด้านหน้าจนครบความยาวที่กำหนด", example: `Text.PadStart("7", 3, "0")`, result: `"007"`, useCase: "ทำให้รหัสสินค้าหรือรหัสพนักงานมีความยาวเท่ากันทุกแถว" },
+      { name: "try ... otherwise", purpose: "ดักจับ Error แล้วใส่ค่าสำรองแทนการให้ Query ล้มทั้งก้อน", example: `try Number.From([ยอด]) otherwise 0`, result: `ตัวเลข หรือ 0 ถ้าแปลงไม่ได้`, useCase: "ป้องกัน Query พังเวลาเจอข้อมูลเสียบางแถว — แต่ต้องตรวจทีหลังว่าไม่ได้ซ่อนปัญหาไว้ (บทที่ 6)" },
+      { name: "Date.StartOfMonth / Date.EndOfMonth", purpose: "หาวันแรกหรือวันสุดท้ายของเดือนจากวันที่ที่กำหนด", example: `Date.StartOfMonth(#date(2026,3,15))`, result: `2026-03-01`, useCase: "จัดกลุ่มข้อมูลรายเดือนให้ทุกแถวในเดือนเดียวกันมีค่าเดียวกัน" },
+      { name: "each _", purpose: "ฟังก์ชันนิรนาม (anonymous function) แทนตัวแปรที่วนซ้ำทีละแถว", example: `List.Transform({1,2,3}, each _ * 2)`, result: `{2, 4, 6}`, useCase: "พบในสูตร Table.SelectRows, Table.AddColumn และ Table.Group แทบทุกครั้ง" },
+    ],
+  },
+  {
+    label: "ซับซ้อนมาก นาน ๆ ใช้ที",
+    formulas: [
+      { name: "List.Distinct", purpose: "ดึงเฉพาะค่าที่ไม่ซ้ำจากรายการ", example: `List.Distinct({"A","B","A","C"})`, result: `{"A", "B", "C"}`, useCase: "ใช้ตรวจว่ามีกี่ภาคหรือกี่สาขาในข้อมูล โดยไม่ต้องสร้างตารางแยก" },
+      { name: `#"ชื่อขั้นตอน ที่มีช่องว่าง"`, purpose: "วิธีอ้างอิงชื่อขั้นตอน (step) ที่มีช่องว่างในภาษา M", example: `#"Changed Type"`, result: "อ้างอิงผลลัพธ์ของขั้นตอนที่ชื่อว่า Changed Type", useCase: "ต้องเข้าใจตอนอ่านหรือแก้ M code ที่ Power Query สร้างให้อัตโนมัติ (บทที่ 6)" },
+      { name: "Table.TransformColumnTypes + Using Locale", purpose: "กำหนดรูปแบบวันที่/ตัวเลขให้ตรงตามภูมิภาคตอนแปลงชนิดข้อมูล", example: `Table.TransformColumnTypes(t, {{"วันที่", type date}}, "en-GB")`, result: `05/03/2026 → 5 มีนาคม (ไม่ใช่ 3 พฤษภาคม)`, useCase: "ป้องกันวันที่แบบ วัน/เดือน/ปี ถูกตีความผิดเป็น เดือน/วัน/ปี — กับดักสำคัญของบทที่ 3" },
+    ],
+  },
+];
+
+function renderFormulaCheatsheet() {
+  let counter = 0;
+  const levelsHtml = formulaCheatSheetLevels.map(level => `
+    <h2 style="margin-top:36px">${esc(level.label)}</h2>
+    <div class="formula-list">${level.formulas.map(f => {
+      counter += 1;
+      return `<article class="formula-card">
+        <div class="formula-card-head"><span class="formula-num">${counter}</span><code class="formula-name">${esc(f.name)}</code></div>
+        <p class="formula-purpose">${esc(f.purpose)}</p>
+        <div class="formula-example"><code>${esc(f.example)}</code><span class="formula-arrow">→</span><code class="formula-result">${esc(f.result)}</code></div>
+        <p class="formula-usecase">${esc(f.useCase)}</p>
+      </article>`;
+    }).join("")}</div>`).join("");
+  return `<section><div class="eyebrow">คู่มือผู้เรียน</div><h1>Formula Cheat Sheet</h1><p class="lede">รวมสูตรพื้นฐานของ Power Query ที่สอนจริงในคอร์สนี้ เรียงจากสูตรที่ง่ายและใช้บ่อยที่สุดไปจนถึงสูตรที่ซับซ้อนและนาน ๆ ใช้ที แต่ละสูตรมีจุดประสงค์ ตัวอย่าง ผลลัพธ์ และบอกว่าเจอในบทไหนของคอร์ส</p>${levelsHtml}</section>`;
 }
 
 function renderTroubleshoot() {
@@ -1292,13 +1351,14 @@ function render() {
   document.querySelectorAll(".nav-link").forEach(el => {
     const navView = el.dataset.view === "slides-resume" ? "slides" : el.dataset.view;
     const isChapterOrExercise = (navView === "chapter" || navView === "exercise") && navView === view;
-    const isSingle = ["agenda", "slides", "workshop", "assessment", "datafiles", "whiteboard", "notes"].includes(navView) && navView === view;
+    const isSingle = ["agenda", "slides", "workshop", "assessment", "datafiles", "whiteboard", "notes", "formulacheatsheet"].includes(navView) && navView === view;
     el.classList.toggle("active", (isChapterOrExercise && el.dataset.id === id) || isSingle);
   });
   app.innerHTML =
     view === "chapter" ? renderChapter(id) :
     view === "plan" ? renderPlan() :
     view === "cheatsheet" ? renderCheatsheet() :
+    view === "formulacheatsheet" ? renderFormulaCheatsheet() :
     view === "troubleshoot" ? renderTroubleshoot() :
     view === "agenda" ? renderAgendaPage() :
     view === "slides" ? renderSlides(id) :
