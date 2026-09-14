@@ -177,6 +177,8 @@ p { margin: 0 0 14px; }
 .workspace-card small { color: var(--muted); }
 
 .reveal-btn { border: 0; border-radius: 6px; background: var(--green); color: #fff; padding: 10px 14px; font-weight: 600; margin: 10px 0; }
+.notes-toggle-btn { background: color-mix(in srgb, var(--green) 10%, var(--surface)); color: var(--green-dark); border: 1px solid var(--line); margin: 0; }
+.notes-toggle-btn:hover { background: color-mix(in srgb, var(--green) 18%, var(--surface)); }
 .reveal-panel { display: none; margin: 0 0 20px; padding: 16px; background: var(--surface); border-left: 3px solid var(--green); font-size: 14px; }
 .reveal-panel.show { display: block; }
 .solution-wrap h4 { margin-top: 22px; font-size: 15px; }

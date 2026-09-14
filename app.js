@@ -961,7 +961,7 @@ function renderSlides(id) {
     </div>
     <div class="slide-nav-buttons">
       <button class="ghost-button" data-view="slides" data-id="${prev ? prev.n : slide.n}" ${prev ? "" : "disabled"}>← แผ่นก่อนหน้า</button>
-      ${isInstructorDevice() ? `<button type="button" class="reveal-btn" data-open="แสดงโน้ตผู้สอน" data-close="ซ่อนโน้ตผู้สอน">แสดงโน้ตผู้สอน</button>` : "<span></span>"}
+      ${isInstructorDevice() ? `<button type="button" class="reveal-btn notes-toggle-btn" data-open="แสดงโน้ตผู้สอน" data-close="ซ่อนโน้ตผู้สอน">แสดงโน้ตผู้สอน</button>` : "<span></span>"}
       <button class="primary-button" data-view="slides" data-id="${next ? next.n : slide.n}" ${next ? "" : "disabled"}>แผ่นถัดไป →</button>
     </div>
     ${isInstructorDevice() ? `<div class="reveal-panel notes-panel">${slide.notesHtml || "<p>ไม่มีโน้ตเพิ่มเติมสำหรับแผ่นนี้</p>"}</div>` : ""}
@@ -1300,7 +1300,7 @@ document.addEventListener("click", event => {
     return;
   }
   if (target.classList.contains("reveal-btn")) {
-    const panel = target.nextElementSibling;
+    const panel = target.classList.contains("notes-toggle-btn") ? document.querySelector(".notes-panel") : target.nextElementSibling;
     panel.classList.toggle("show");
     target.textContent = panel.classList.contains("show") ? target.dataset.close : target.dataset.open;
     return;
