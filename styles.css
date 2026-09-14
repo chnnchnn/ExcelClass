@@ -450,7 +450,7 @@ p { margin: 0 0 14px; }
 
 /* App Links QR modal — URL text sized well above the base .lede (both density
    modes) so it's easy to read projected on a classroom screen */
-.qr-modal-url { font-size: 36px !important; }
+.qr-modal-url { font-size: 32.4px !important; }
 /* the URL at that size needs more room than the default modal width gives it on
    typical screens, or a lone character wraps onto its own line — widen the box
    and trim its side padding just for this modal so more of it fits per line */
