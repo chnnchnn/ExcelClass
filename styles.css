@@ -196,7 +196,8 @@ p { margin: 0 0 14px; }
 .slide-counter { font: 500 13px "IBM Plex Mono", monospace; color: var(--muted); }
 .slide-jump { margin-left: auto; max-width: 320px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: 13px; }
 .slide-context { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
-.slide-card { padding: 28px clamp(20px, 4vw, 40px); border: 1px solid var(--line); border-radius: 14px; background: var(--surface); min-height: 260px; }
+.slide-card { padding: 28px clamp(20px, 4vw, 40px); border: 1px solid var(--line); border-radius: 14px; background: var(--surface); min-height: 780px; }
+@media (min-width: 900px) { .slide-card { min-height: 600px; } }
 .slide-card h1 { font-size: clamp(24px, 3vw, 34px); margin-top: 0; }
 .slide-body p { margin: 0 0 14px; }
 .slide-body ul, .slide-body ol { margin: 0 0 14px; padding-left: 20px; }
@@ -236,7 +237,7 @@ p { margin: 0 0 14px; }
 
 @media (max-width: 700px) {
   .slide-jump { margin-left: 0; max-width: 100%; width: 100%; }
-  .slide-card { padding: 20px; }
+  .slide-card { padding: 20px; min-height: 1180px; }
 }
 
 /* ---- Display density: Normal (default var) vs Compact ---- */
@@ -268,7 +269,7 @@ p { margin: 0 0 14px; }
 :root[data-density="compact"] .side-note { padding: 13px; font-size: 13px; }
 :root[data-density="compact"] .exercise-pager { margin-top: 20px; padding-top: 12px; }
 :root[data-density="compact"] .solution-wrap h4 { margin-top: 14px; }
-:root[data-density="compact"] .slide-card { padding: 18px clamp(16px, 3vw, 30px); min-height: unset; }
+:root[data-density="compact"] .slide-card { padding: 18px clamp(16px, 3vw, 30px); }
 :root[data-density="compact"] .slide-body ul, :root[data-density="compact"] .slide-body ol { margin: 0 0 9px; }
 :root[data-density="compact"] .slide-body li { margin: 2px 0; }
 :root[data-density="compact"] .slide-nav-buttons { margin-top: 16px; }
