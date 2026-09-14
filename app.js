@@ -500,7 +500,7 @@ function renderScores() {
   if (!isInstructorDevice()) {
     return `<section><div class="eyebrow">ผลคะแนน</div><h1>หน้านี้สำหรับผู้สอนเท่านั้น</h1><p class="lede">ถ้าคุณคือผู้สอน ให้เปิดลิงก์ตั้งค่าโหมดผู้สอนก่อน แล้วกลับมาที่เมนูนี้อีกครั้ง</p></section>`;
   }
-  return `<section><div class="eyebrow">ผลคะแนน</div><h1>ตารางคะแนนแบบ</h1><p class="lede">คะแนนแบบทดสอบ แบบฝึกหัด และ Workshop ของผู้เรียน</p>
+  return `<section><div class="eyebrow">ผลคะแนน</div><h1>ตารางคะแนน</h1><p class="lede">คะแนนแบบทดสอบ แบบฝึกหัด และ Workshop ของผู้เรียน</p>
   <div id="scores-container"><p class="muted">กำลังโหลดข้อมูล...</p></div>
   </section>`;
 }
