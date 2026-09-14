@@ -848,7 +848,7 @@ function buildAgendaSections() {
   const sections = [{ type: "intro", title: "ก่อนเริ่มเรียน", slides: introSlides }];
   courseAgenda.forEach(sess => {
     const rows = sess.items.map(item => {
-      if (item.break) return { type: "break", duration: item.duration };
+      if (item.break) return { type: "break", duration: item.duration, label: item.label };
       const dividers = slidesData.filter(s => dividerHourMap[s.title] === item.hour);
       const hourSlides = slidesData.filter(s => hourNumOf(s) === item.hour);
       return { type: "hour", ...item, slides: [...dividers, ...hourSlides] };
@@ -899,7 +899,7 @@ function renderAgendaPage() {
       ? `<td class="agenda-session-cell ${sessionColors[sIdx]}" rowspan="${sess.items.length}"><strong>${esc(sess.session)}</strong><br><small>${esc(sess.sessionEn)}</small></td>`
       : "";
     if (it.break) {
-      return `<tr class="agenda-break-row ${sessionColors[sIdx]}">${sessionCell}<td colspan="4">☕ พัก ${esc(it.duration)}</td></tr>`;
+      return `<tr class="agenda-break-row ${sessionColors[sIdx]}">${sessionCell}<td colspan="4">${esc(it.icon || "☕")} ${esc(it.label || "พัก")} ${esc(it.duration)}</td></tr>`;
     }
     const slideN = firstSlideForHour(it.hour);
     const hourCell = slideN
@@ -928,7 +928,7 @@ function renderSlides(id) {
       <h2 style="margin-top:36px">${esc(sess.title)}</h2>
       <p class="lede" style="font-size:14px;margin-top:-6px">${esc(sess.subtitle)}</p>
       ${sess.rows.map(row => row.type === "break"
-        ? `<div class="agenda-break">พัก ${esc(row.duration)}</div>`
+        ? `<div class="agenda-break">${esc(row.label || "พัก")} ${esc(row.duration)}</div>`
         : `<h3>${esc((row.slides.find(s => s.hour) || {}).hour || `ชั่วโมงที่ ${row.hour}`)}</h3>
            <p class="agenda-hour-meta">${esc(row.objective)} · กิจกรรม: ${esc(row.activity)} · ${esc(row.duration)}</p>
            <div class="chapter-list">${row.slides.map(slideRow).join("")}</div>`
