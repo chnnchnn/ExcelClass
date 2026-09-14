@@ -40,6 +40,10 @@ const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 // the account that owns/deploys this script (it runs as "Execute as: Me").
 const SUBMISSIONS_FOLDER_ID = "18oMdTkibeRqSQ9L5BJk6PT8roQtxWuVP";
 
+// Total number of exercise sets in the course (keep in sync with exercisesData.length in app.js) --
+// used to compute "X / 7 exercises passed" in the instructor scores summary.
+const TOTAL_EXERCISES = 7;
+
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
@@ -130,10 +134,87 @@ function doGet(e) {
   if (params.action === "chat") {
     return getChatMessages_(params);
   }
+  if (params.action === "scores") {
+    return getScoresSummary_(params);
+  }
   const ss = getOrCreateSpreadsheet_();
   return ContentService.createTextOutput(
     "Excel Power Query class backend is running.\nGrade book: " + ss.getUrl()
   ).setMimeType(ContentService.MimeType.TEXT);
+}
+
+// Instructor-only scores summary: aggregates the Quiz, ExerciseSelfCheck and
+// WorkshopSelfCheck sheets into one row per student, sorted by an overall
+// percentage descending. Gated by SHARED_SECRET (unlike the chat GET, since
+// this exposes every learner's name and score, not shared classroom chatter).
+function getScoresSummary_(params) {
+  if (SHARED_SECRET && params.secret !== SHARED_SECRET) {
+    return jsonResponse({ ok: false, error: "unauthorized" });
+  }
+  const ss = getOrCreateSpreadsheet_();
+  const students = {};
+  const ensure = (name) => {
+    const key = String(name || "").trim() || "ไม่ระบุชื่อ";
+    if (!students[key]) students[key] = { name: key, quizPre: null, quizPost: null, exercisesPassed: 0, exercisesAttempted: 0, workshop: null };
+    return students[key];
+  };
+
+  const quizSheet = ss.getSheetByName("Quiz");
+  if (quizSheet && quizSheet.getLastRow() > 1) {
+    quizSheet.getRange(2, 1, quizSheet.getLastRow() - 1, 5).getValues().forEach(row => {
+      const [, name, mode, score, total] = row;
+      if (!name) return;
+      const s = ensure(name);
+      if (mode === "pre") s.quizPre = { score, total };
+      else if (mode === "post") s.quizPost = { score, total };
+    });
+  }
+
+  const exSheet = ss.getSheetByName("ExerciseSelfCheck");
+  if (exSheet && exSheet.getLastRow() > 1) {
+    const latestByExercise = {}; // "name|exerciseId" -> pass boolean, last row wins (most recent attempt)
+    exSheet.getRange(2, 1, exSheet.getLastRow() - 1, 6).getValues().forEach(row => {
+      const [, name, exerciseId, , , allPass] = row;
+      if (!name) return;
+      latestByExercise[String(name).trim() + "|" + exerciseId] = allPass === "ผ่าน";
+    });
+    Object.keys(latestByExercise).forEach(key => {
+      const name = key.split("|")[0];
+      const s = ensure(name);
+      s.exercisesAttempted += 1;
+      if (latestByExercise[key]) s.exercisesPassed += 1;
+    });
+  }
+
+  const wsSheet = ss.getSheetByName("WorkshopSelfCheck");
+  if (wsSheet && wsSheet.getLastRow() > 1) {
+    wsSheet.getRange(2, 1, wsSheet.getLastRow() - 1, 5).getValues().forEach(row => {
+      const [, name, score, total, allPass] = row;
+      if (!name) return;
+      ensure(name).workshop = { score, total, pass: allPass === "ผ่าน" }; // last row wins
+    });
+  }
+
+  const list = Object.keys(students).map(key => {
+    const s = students[key];
+    const quizPct = s.quizPost ? s.quizPost.score / s.quizPost.total : (s.quizPre ? s.quizPre.score / s.quizPre.total : null);
+    const exercisePct = s.exercisesAttempted > 0 ? s.exercisesPassed / TOTAL_EXERCISES : null;
+    const workshopPct = s.workshop ? s.workshop.score / s.workshop.total : null;
+    const parts = [quizPct, exercisePct, workshopPct].filter(p => p !== null);
+    const overall = parts.length ? (parts.reduce((a, b) => a + b, 0) / parts.length) * 100 : 0;
+    return {
+      name: s.name,
+      quizPre: s.quizPre,
+      quizPost: s.quizPost,
+      exercisesPassed: s.exercisesPassed,
+      exercisesTotal: TOTAL_EXERCISES,
+      workshop: s.workshop,
+      overall: Math.round(overall * 10) / 10,
+    };
+  });
+
+  list.sort((a, b) => b.overall - a.overall);
+  return jsonResponse({ ok: true, students: list });
 }
 
 // Returns chat messages after row `since` (its row number in the Chat sheet),

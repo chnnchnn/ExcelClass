@@ -495,6 +495,52 @@ function initNotesPage() {
   document.querySelectorAll(".note-history-item").forEach(btn => btn.addEventListener("click", () => noteSelect(Number(btn.dataset.noteId))));
 }
 
+// ---- Instructor-only scores summary (pulls aggregated Quiz/Exercise/Workshop data from the GAS backend) ----
+function renderScores() {
+  if (!isInstructorDevice()) {
+    return `<section><div class="eyebrow">ผลคะแนน</div><h1>หน้านี้สำหรับผู้สอนเท่านั้น</h1><p class="lede">ถ้าคุณคือผู้สอน ให้เปิดลิงก์ตั้งค่าโหมดผู้สอนก่อน แล้วกลับมาที่เมนูนี้อีกครั้ง</p></section>`;
+  }
+  return `<section><div class="eyebrow">ผลคะแนน</div><h1>ผลคะแนนผู้เรียนทั้งหมด</h1><p class="lede">รวมคะแนนแบบทดสอบ แบบฝึกหัด และ Workshop ของผู้เรียนทุกคนจาก Google Sheet เรียงจากคะแนนรวมมากไปน้อย</p>
+  <div id="scores-container"><p class="muted">กำลังโหลดข้อมูล...</p></div>
+  </section>`;
+}
+
+async function initScoresPage() {
+  const container = document.querySelector("#scores-container");
+  if (!container) return;
+  if (!GAS_ENDPOINT) {
+    container.innerHTML = `<p class="muted">ยังไม่ได้เชื่อมต่อระบบหลังบ้าน</p>`;
+    return;
+  }
+  try {
+    const res = await fetch(`${GAS_ENDPOINT}?action=scores&secret=${GAS_SECRET}`);
+    const data = await res.json();
+    if (!data.ok) {
+      container.innerHTML = `<p class="muted">โหลดข้อมูลไม่สำเร็จ: ${esc(data.error || "unknown error")}</p>`;
+      return;
+    }
+    if (!data.students.length) {
+      container.innerHTML = `<p class="muted">ยังไม่มีข้อมูลคะแนนของผู้เรียนเลย</p>`;
+      return;
+    }
+    const rows = data.students.map((s, i) => `<tr>
+      <td>${i + 1}</td>
+      <td>${esc(s.name)}</td>
+      <td>${s.quizPre ? `${s.quizPre.score}/${s.quizPre.total}` : "-"}</td>
+      <td>${s.quizPost ? `${s.quizPost.score}/${s.quizPost.total}` : "-"}</td>
+      <td>${s.exercisesPassed}/${s.exercisesTotal}</td>
+      <td>${s.workshop ? `${s.workshop.score}/${s.workshop.total}${s.workshop.pass ? " ✅" : ""}` : "-"}</td>
+      <td><strong>${s.overall}%</strong></td>
+    </tr>`).join("");
+    container.innerHTML = `<div class="agenda-table-wrap"><table class="agenda-table">
+      <thead><tr><th>#</th><th>ชื่อผู้เรียน</th><th>Quiz ก่อนเรียน</th><th>Quiz หลังเรียน</th><th>แบบฝึกหัดผ่าน</th><th>Workshop</th><th>คะแนนรวม</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+  } catch (err) {
+    container.innerHTML = `<p class="muted">โหลดข้อมูลไม่สำเร็จ ลองรีเฟรชหน้าใหม่อีกครั้ง</p>`;
+  }
+}
+
 // Google Apps Script grade-book backend — see backend/README.md to deploy your own
 // and paste the resulting Web App URL here. Left blank, the site works exactly as
 // before and only saves scores to the visitor's own browser.
@@ -792,6 +838,7 @@ function renderNav() {
     <div class="nav-group-label">วัดผลและทรัพยากร</div>
     <button class="nav-link" data-view="assessment"><span class="nav-number">✎</span>แบบทดสอบและความมั่นใจ</button>
     <button class="nav-link" data-view="datafiles"><span class="nav-number">⇩</span>ไฟล์ฝึกปฏิบัติ</button>
+    ${isInstructorDevice() ? navCollapsibleGroup("scores", "ผลคะแนน", `<button class="nav-link" data-view="scores"><span class="nav-number">📊</span>ผลคะแนนผู้เรียนทั้งหมด</button>`) : ""}
   `;
   document.querySelectorAll(".nav-group-toggle").forEach(btn => btn.addEventListener("click", () => {
     const key = btn.dataset.navGroup;
@@ -1371,7 +1418,7 @@ function render() {
   document.querySelectorAll(".nav-link").forEach(el => {
     const navView = el.dataset.view === "slides-resume" ? "slides" : el.dataset.view;
     const isChapterOrExercise = (navView === "chapter" || navView === "exercise") && navView === view;
-    const isSingle = ["agenda", "slides", "workshop", "assessment", "datafiles", "whiteboard", "notes", "formulacheatsheet"].includes(navView) && navView === view;
+    const isSingle = ["agenda", "slides", "workshop", "assessment", "datafiles", "whiteboard", "notes", "formulacheatsheet", "scores"].includes(navView) && navView === view;
     el.classList.toggle("active", (isChapterOrExercise && el.dataset.id === id) || isSingle);
   });
   app.innerHTML =
@@ -1388,9 +1435,11 @@ function render() {
     view === "datafiles" ? renderDataFiles() :
     view === "whiteboard" ? renderWhiteboard() :
     view === "notes" ? renderNotes() :
+    view === "scores" ? renderScores() :
     search.value ? renderSearch(search.value) : renderHome();
   if (view === "whiteboard") initWhiteboardCanvas();
   if (view === "notes") initNotesPage();
+  if (view === "scores" && isInstructorDevice()) initScoresPage();
   const sidebarEl = document.querySelector("#sidebar");
   if (!sidebarEl.classList.contains("pinned")) {
     sidebarEl.classList.remove("open");
