@@ -447,3 +447,7 @@ p { margin: 0 0 14px; }
 .agenda-swatch.agenda-session-b { background: #deebf7; }
 .agenda-swatch.agenda-session-c { background: #e2efda; }
 .agenda-swatch-break { background: #d9d9d9; }
+
+/* App Links QR modal — URL text sized well above the base .lede (both density
+   modes) so it's easy to read projected on a classroom screen */
+.qr-modal-url { font-size: 36px !important; }
