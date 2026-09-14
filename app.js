@@ -557,6 +557,26 @@ function showQrModal() {
   showModal(`<img class="qr-modal-image" src="${canvas.toDataURL()}" alt="QR code สำหรับ ${esc(MASCOT_REFRESH_URL)}" /><p class="lede" style="text-align:center;word-break:break-all">${esc(MASCOT_REFRESH_URL)}</p>`);
 }
 
+// ---- Instructor device flag ----
+// A private, per-browser toggle (not real login/security — this is client-side
+// code anyone can read) that lets the chat unread badge show only on the
+// instructor's own device, without asking students to sign in or prove who
+// they are. Visit the site once with ?instructor=pchannar on your own laptop
+// to turn it on (?instructor=off turns it back off); it then persists in that
+// browser's localStorage.
+const INSTRUCTOR_FLAG_KEY = "pq-is-instructor";
+function isInstructorDevice() { return localStorage.getItem(INSTRUCTOR_FLAG_KEY) === "1"; }
+(function initInstructorFlagFromUrl() {
+  const flag = new URLSearchParams(location.search).get("instructor");
+  if (flag === "pchannar" && !isInstructorDevice()) {
+    localStorage.setItem(INSTRUCTOR_FLAG_KEY, "1");
+    toast("เปิดโหมดผู้สอนแล้ว — เครื่องนี้จะมีสัญลักษณ์แจ้งเตือนข้อความแชทใหม่");
+  } else if (flag === "off" && isInstructorDevice()) {
+    localStorage.removeItem(INSTRUCTOR_FLAG_KEY);
+    toast("ปิดโหมดผู้สอนของเครื่องนี้แล้ว");
+  }
+})();
+
 // ---- Shared class chat (polls the GAS backend so every visitor sees the same messages) ----
 const CHAT_POLL_INTERVAL_MS = 4000;
 const MAX_CHAT_MESSAGE_LENGTH = 500; // keep in sync with MAX_CHAT_MESSAGE_LENGTH in backend/Code.gs
@@ -620,7 +640,7 @@ async function fetchChatMessages() {
     const panel = document.querySelector("#chat-panel");
     if (panel && panel.classList.contains("open")) {
       renderChatMessages();
-    } else if (!isFirstLoad) {
+    } else if (!isFirstLoad && isInstructorDevice()) {
       chatUnreadCount += freshMessages.filter(m => m.name !== studentName()).length;
       updateChatBadge();
     }
