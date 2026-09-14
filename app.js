@@ -500,7 +500,7 @@ function renderScores() {
   if (!isInstructorDevice()) {
     return `<section><div class="eyebrow">ผลคะแนน</div><h1>หน้านี้สำหรับผู้สอนเท่านั้น</h1><p class="lede">ถ้าคุณคือผู้สอน ให้เปิดลิงก์ตั้งค่าโหมดผู้สอนก่อน แล้วกลับมาที่เมนูนี้อีกครั้ง</p></section>`;
   }
-  return `<section><div class="eyebrow">ผลคะแนน</div><h1>ผลคะแนนผู้เรียนทั้งหมด</h1><p class="lede">รวมคะแนนแบบทดสอบ แบบฝึกหัด และ Workshop ของผู้เรียนทุกคนจาก Google Sheet เรียงจากคะแนนรวมมากไปน้อย</p>
+  return `<section><div class="eyebrow">ผลคะแนน</div><h1>ผลคะแนนผู้เรียนทั้งหมด</h1><p class="lede">รวมคะแนนแบบทดสอบ แบบฝึกหัด และ Workshop ของผู้เรียนทุกคนจาก Google Sheet เรียงให้ผู้เรียนที่ทำได้ดีที่สุดอยู่บนสุด</p>
   <div id="scores-container"><p class="muted">กำลังโหลดข้อมูล...</p></div>
   </section>`;
 }
@@ -530,10 +530,9 @@ async function initScoresPage() {
       <td>${s.quizPost ? `${s.quizPost.score}/${s.quizPost.total}` : "-"}</td>
       <td>${s.exercisesPassed}/${s.exercisesTotal}</td>
       <td>${s.workshop ? `${s.workshop.score}/${s.workshop.total}${s.workshop.pass ? " ✅" : ""}` : "-"}</td>
-      <td><strong>${s.overall}%</strong></td>
     </tr>`).join("");
-    container.innerHTML = `<div class="agenda-table-wrap"><table class="agenda-table">
-      <thead><tr><th>#</th><th>ชื่อผู้เรียน</th><th>Quiz ก่อนเรียน</th><th>Quiz หลังเรียน</th><th>แบบฝึกหัดผ่าน</th><th>Workshop</th><th>คะแนนรวม</th></tr></thead>
+    container.innerHTML = `<div class="agenda-table-wrap"><table class="agenda-table scores-table">
+      <thead><tr><th>#</th><th>ชื่อผู้เรียน</th><th>Quiz ก่อนเรียน</th><th>Quiz หลังเรียน</th><th>แบบฝึกหัดผ่าน</th><th>Workshop</th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>`;
   } catch (err) {
