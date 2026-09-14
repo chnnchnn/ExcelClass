@@ -955,8 +955,8 @@ function renderSlides(id) {
       <h1>${esc(slide.title)}</h1>
       <div class="slide-body">${slide.bodyHtml}</div>
     </div>
-    <button type="button" class="reveal-btn" data-open="แสดงโน้ตผู้สอน" data-close="ซ่อนโน้ตผู้สอน">แสดงโน้ตผู้สอน</button>
-    <div class="reveal-panel notes-panel">${slide.notesHtml || "<p>ไม่มีโน้ตเพิ่มเติมสำหรับแผ่นนี้</p>"}</div>
+    ${isInstructorDevice() ? `<button type="button" class="reveal-btn" data-open="แสดงโน้ตผู้สอน" data-close="ซ่อนโน้ตผู้สอน">แสดงโน้ตผู้สอน</button>
+    <div class="reveal-panel notes-panel">${slide.notesHtml || "<p>ไม่มีโน้ตเพิ่มเติมสำหรับแผ่นนี้</p>"}</div>` : ""}
     <div class="slide-nav-buttons">
       <button class="ghost-button" data-view="slides" data-id="${prev ? prev.n : slide.n}" ${prev ? "" : "disabled"}>← แผ่นก่อนหน้า</button>
       <button class="primary-button" data-view="slides" data-id="${next ? next.n : slide.n}" ${next ? "" : "disabled"}>แผ่นถัดไป →</button>
