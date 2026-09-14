@@ -769,7 +769,7 @@ function renderNav() {
   document.querySelector("#chapter-nav").innerHTML = `
     <div class="nav-group-label">ห้องเรียน</div>
     <button class="nav-link" data-view="agenda"><span class="nav-number">📅</span>Class Agenda</button>
-    <button class="nav-link" data-view="slides"><span class="nav-number">▤</span>สไลด์บรรยาย (87 แผ่น)</button>
+    <button class="nav-link" data-view="slides-resume"><span class="nav-number">▤</span>สไลด์บรรยาย (87 แผ่น)</button>
     <button class="nav-link" data-view="whiteboard"><span class="nav-number">🖊️</span>Whiteboard</button>
     <button class="nav-link" data-view="notes"><span class="nav-number">📝</span>Note</button>
     <div class="nav-group-label">คู่มือผู้เรียน · 7 บท</div>
@@ -920,6 +920,7 @@ function renderAgendaPage() {
 function renderSlides(id) {
   const n = parseInt(id, 10);
   const slide = slidesData.find(s => s.n === n);
+  if (slide) save("pq-last-slide", n);
   if (!slide) {
     const sections = buildAgendaSections();
     const introHtml = `<h2 style="margin-top:36px">${esc(sections[0].title)}</h2><div class="chapter-list">${sections[0].slides.map(slideRow).join("")}</div>`;
@@ -1256,8 +1257,9 @@ function render() {
   const search = document.querySelector("#search");
   const active = view === "chapter" || view === "exercise" ? id : (view === "slides" ? "" : "");
   document.querySelectorAll(".nav-link").forEach(el => {
-    const isChapterOrExercise = (el.dataset.view === "chapter" || el.dataset.view === "exercise") && el.dataset.view === view;
-    const isSingle = ["agenda", "slides", "workshop", "assessment", "datafiles", "whiteboard", "notes"].includes(el.dataset.view) && el.dataset.view === view;
+    const navView = el.dataset.view === "slides-resume" ? "slides" : el.dataset.view;
+    const isChapterOrExercise = (navView === "chapter" || navView === "exercise") && navView === view;
+    const isSingle = ["agenda", "slides", "workshop", "assessment", "datafiles", "whiteboard", "notes"].includes(navView) && navView === view;
     el.classList.toggle("active", (isChapterOrExercise && el.dataset.id === id) || isSingle);
   });
   app.innerHTML =
@@ -1308,6 +1310,12 @@ document.addEventListener("click", event => {
   if (!target.dataset.view) return;
   event.preventDefault();
   if (target.dataset.view === "slide-start") { setViewHash("slides/1"); return; }
+  if (target.dataset.view === "slides-resume") {
+    const last = stored("pq-last-slide", null);
+    const next = last ? `slides/${last}` : "slides";
+    if (location.hash === `#${next}`) render(); else setViewHash(next);
+    return;
+  }
   const hashParts = [target.dataset.view];
   if (target.dataset.id !== undefined) hashParts.push(target.dataset.id);
   if (target.dataset.sub !== undefined) hashParts.push(target.dataset.sub);
