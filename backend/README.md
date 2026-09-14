@@ -27,6 +27,7 @@ Everything on the site that currently produces a score is synced here:
 | `WorkshopSelfCheck` | The final workshop's self-check |
 | `FileUploads` (log only) | Filename/size/link for every homework file a student uploads |
 | `Chat` | Messages posted from the shared class chat panel (💬 button, top-right of the header) |
+| `Notes` | Text notes saved from the Note page (📝 in the sidebar) via its "บันทึกลง Google Sheet" button |
 
 Students can also upload an actual homework file (`.xlsx`/`.xlsm`/`.xls`, max
 8MB — keep `MAX_UPLOAD_BYTES` in sync between `Code.gs` and `app.js` if you

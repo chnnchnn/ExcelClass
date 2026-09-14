@@ -321,7 +321,7 @@ function wbClosePage(index) {
   render();
 }
 
-function wbTimestampLabel() {
+function fileTimestampLabel() {
   const d = new Date();
   const pad = n => String(n).padStart(2, "0");
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
@@ -330,7 +330,7 @@ function wbSavePng() {
   const canvas = wbCanvasEl();
   if (!canvas) return;
   const link = document.createElement("a");
-  link.download = `whiteboard-${wbTimestampLabel()}.png`;
+  link.download = `whiteboard-${fileTimestampLabel()}.png`;
   link.href = canvas.toDataURL("image/png");
   link.click();
   toast("บันทึกรูปภาพ Whiteboard แล้ว");
@@ -350,7 +350,7 @@ async function wbSavePdf() {
     const drawW = canvas.width * ratio;
     const drawH = canvas.height * ratio;
     pdf.addImage(canvas.toDataURL("image/png"), "PNG", (pageWidth - drawW) / 2, (pageHeight - drawH) / 2, drawW, drawH);
-    pdf.save(`whiteboard-${wbTimestampLabel()}.pdf`);
+    pdf.save(`whiteboard-${fileTimestampLabel()}.pdf`);
     toast("บันทึก PDF Whiteboard แล้ว");
   } catch (err) {
     console.error(err);
@@ -391,6 +391,108 @@ function initWhiteboardCanvas() {
   wbApplyToolUI();
   wbApplyColorUI();
   document.querySelector("#wb-size").value = wbSize;
+}
+
+// ---- Note (personal text notes — autosaved to this browser, optionally synced to the Google Sheet backend or exported as .txt) ----
+let noteEntries = stored("pq-notes", []); // {id, title, content, savedAt}
+let noteActiveId = null; // id of the note currently loaded in the editor; null = new/unsaved
+let noteDraft = { title: "", content: "" };
+
+function persistNotes() { save("pq-notes", noteEntries); }
+
+function noteSelect(id) {
+  const entry = noteEntries.find(n => n.id === id);
+  if (!entry) return;
+  noteActiveId = id;
+  noteDraft = { title: entry.title, content: entry.content };
+  render();
+}
+function noteStartNew() {
+  noteActiveId = null;
+  noteDraft = { title: "", content: "" };
+  render();
+}
+function noteDelete() {
+  if (!noteActiveId) return;
+  if (!confirm("ลบบันทึกนี้ใช่หรือไม่? ข้อมูลจะหายไปจากเบราว์เซอร์นี้ (ยังอยู่ใน Google Sheet ถ้าเคยบันทึกไปแล้ว)")) return;
+  noteEntries = noteEntries.filter(n => n.id !== noteActiveId);
+  persistNotes();
+  noteStartNew();
+}
+async function noteSaveToSheet() {
+  const title = noteDraft.title.trim();
+  const content = noteDraft.content.trim();
+  if (!content) { toast("กรุณาพิมพ์เนื้อหาก่อนบันทึก"); return; }
+  const name = studentName();
+  if (!name) { toast("กรุณากรอกชื่อของคุณก่อนบันทึก"); return; }
+  const now = Date.now();
+  if (noteActiveId && noteEntries.some(n => n.id === noteActiveId)) {
+    const entry = noteEntries.find(n => n.id === noteActiveId);
+    entry.title = title;
+    entry.content = content;
+    entry.savedAt = now;
+  } else {
+    noteActiveId = now;
+    noteEntries.push({ id: noteActiveId, title, content, savedAt: now });
+  }
+  persistNotes();
+  syncToBackend("notes", { title, content });
+  toast("บันทึกลง Google Sheet แล้ว");
+  render();
+}
+function noteSaveAsTxt() {
+  const content = noteDraft.content;
+  if (!content.trim()) { toast("ยังไม่มีเนื้อหาให้บันทึก"); return; }
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const safeTitle = (noteDraft.title || "note").trim().replace(/[\\/:*?"<>|]+/g, "_").slice(0, 60) || "note";
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${safeTitle}-${fileTimestampLabel()}.txt`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+  toast("บันทึกไฟล์ .txt แล้ว");
+}
+
+function renderNotes() {
+  const historyHtml = noteEntries.length
+    ? noteEntries.slice().reverse().map(n => `
+      <button type="button" class="note-history-item ${n.id === noteActiveId ? "active" : ""}" data-note-id="${n.id}">
+        <strong>${esc(n.title || "ไม่มีหัวข้อ")}</strong>
+        <small>${esc(new Date(n.savedAt).toLocaleString("th-TH"))}</small>
+        <span>${esc((n.content || "").slice(0, 70))}${(n.content || "").length > 70 ? "…" : ""}</span>
+      </button>`).join("")
+    : `<p class="muted">ยังไม่มีบันทึกที่เก็บไว้ในเบราว์เซอร์นี้</p>`;
+  return `<section class="notes-page">
+    <div class="notes-toolbar">
+      <button type="button" id="note-new" class="ghost-button">🆕 บันทึกใหม่</button>
+      <button type="button" id="note-save-sheet" class="primary-button">💾 บันทึกลง Google Sheet</button>
+      <button type="button" id="note-save-txt" class="primary-button">⬇ บันทึกเป็นไฟล์ .txt</button>
+      <button type="button" id="note-delete" class="ghost-button" ${noteActiveId ? "" : "disabled"}>🗑 ลบบันทึกนี้</button>
+    </div>
+    <div class="notes-layout">
+      <div class="notes-editor">
+        <input type="text" id="note-title" placeholder="หัวข้อ (ไม่บังคับ)" value="${esc(noteDraft.title)}" />
+        <textarea id="note-content" placeholder="พิมพ์บันทึกของคุณที่นี่...">${esc(noteDraft.content)}</textarea>
+      </div>
+      <aside class="notes-history">
+        <h3>ประวัติบันทึกของฉัน (${noteEntries.length})</h3>
+        ${historyHtml}
+      </aside>
+    </div>
+  </section>`;
+}
+
+function initNotesPage() {
+  const titleInput = document.querySelector("#note-title");
+  const contentInput = document.querySelector("#note-content");
+  if (!titleInput || !contentInput) return;
+  titleInput.addEventListener("input", (e) => { noteDraft.title = e.target.value; });
+  contentInput.addEventListener("input", (e) => { noteDraft.content = e.target.value; });
+  document.querySelector("#note-new").addEventListener("click", noteStartNew);
+  document.querySelector("#note-delete").addEventListener("click", noteDelete);
+  document.querySelector("#note-save-sheet").addEventListener("click", noteSaveToSheet);
+  document.querySelector("#note-save-txt").addEventListener("click", noteSaveAsTxt);
+  document.querySelectorAll(".note-history-item").forEach(btn => btn.addEventListener("click", () => noteSelect(Number(btn.dataset.noteId))));
 }
 
 // Google Apps Script grade-book backend — see backend/README.md to deploy your own
@@ -633,6 +735,7 @@ function renderNav() {
     <button class="nav-link" data-view="agenda"><span class="nav-number">📅</span>Class Agenda</button>
     <button class="nav-link" data-view="slides"><span class="nav-number">▤</span>สไลด์บรรยาย (87 แผ่น)</button>
     <button class="nav-link" data-view="whiteboard"><span class="nav-number">🖊️</span>Whiteboard</button>
+    <button class="nav-link" data-view="notes"><span class="nav-number">📝</span>Note</button>
     <div class="nav-group-label">คู่มือผู้เรียน · 7 บท</div>
     ${chapterLinks}
     <div class="nav-group-label">แบบฝึกหัด · 7 ชุด</div>
@@ -1118,7 +1221,7 @@ function render() {
   const active = view === "chapter" || view === "exercise" ? id : (view === "slides" ? "" : "");
   document.querySelectorAll(".nav-link").forEach(el => {
     const isChapterOrExercise = (el.dataset.view === "chapter" || el.dataset.view === "exercise") && el.dataset.view === view;
-    const isSingle = ["agenda", "slides", "workshop", "assessment", "datafiles", "whiteboard"].includes(el.dataset.view) && el.dataset.view === view;
+    const isSingle = ["agenda", "slides", "workshop", "assessment", "datafiles", "whiteboard", "notes"].includes(el.dataset.view) && el.dataset.view === view;
     el.classList.toggle("active", (isChapterOrExercise && el.dataset.id === id) || isSingle);
   });
   app.innerHTML =
@@ -1133,8 +1236,10 @@ function render() {
     view === "assessment" ? renderAssessment(id, sub) :
     view === "datafiles" ? renderDataFiles() :
     view === "whiteboard" ? renderWhiteboard() :
+    view === "notes" ? renderNotes() :
     search.value ? renderSearch(search.value) : renderHome();
   if (view === "whiteboard") initWhiteboardCanvas();
+  if (view === "notes") initNotesPage();
   const sidebarEl = document.querySelector("#sidebar");
   if (!sidebarEl.classList.contains("pinned")) {
     sidebarEl.classList.remove("open");

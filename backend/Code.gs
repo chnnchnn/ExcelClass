@@ -22,6 +22,7 @@ const HEADERS = {
   workshop: ["เวลา", "ชื่อนักเรียน", "คะแนน", "เต็ม", "ผ่านครบทุกข้อ", "รายละเอียด (JSON)"],
   file: ["เวลา", "ชื่อนักเรียน", "ชื่อไฟล์", "ขนาดไฟล์", "ลิงก์ไฟล์ใน Drive"],
   chat: ["เวลา", "ชื่อนักเรียน", "ข้อความ"],
+  notes: ["เวลา", "ชื่อผู้บันทึก", "หัวข้อ", "เนื้อหา"],
 };
 
 // Max characters kept per chat message (matches MAX_CHAT_MESSAGE_LENGTH in app.js).
@@ -173,6 +174,8 @@ function buildRow_(type, body) {
       return [now, name, body.score, body.total, body.allPass ? "ผ่าน" : "ไม่ผ่าน", JSON.stringify(body.inputs || [])];
     case "chat":
       return [now, name, String(body.message || "").slice(0, MAX_CHAT_MESSAGE_LENGTH)];
+    case "notes":
+      return [now, name, body.title || "", body.content || ""];
     default:
       return [now, name, JSON.stringify(body)];
   }
@@ -206,7 +209,7 @@ function getOrCreateSheet_(name, headers) {
 }
 
 function capitalize_(type) {
-  const names = { quiz: "Quiz", confidence: "Confidence", followup: "Followup", exercise: "ExerciseSelfCheck", workshop: "WorkshopSelfCheck", chat: "Chat" };
+  const names = { quiz: "Quiz", confidence: "Confidence", followup: "Followup", exercise: "ExerciseSelfCheck", workshop: "WorkshopSelfCheck", chat: "Chat", notes: "Notes" };
   return names[type] || null;
 }
 
